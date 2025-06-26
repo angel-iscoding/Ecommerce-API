@@ -52,7 +52,7 @@ export class CartService {
                 return product;
             })
         );   
-
+        
         if (isAuthenticated) {
             // Usuario autenticado: solo guardar en DB
             await this.addProductToUserCart(userId, productId);
@@ -103,7 +103,7 @@ export class CartService {
         // Limpiar carrito
 
         cart.products.forEach(async (product) => {
-            await this.productRepostory.downStock(product);
+            if (product.stock !== 0) await this.productRepostory.downStock(product); 
         });
 
         const order: Order = await this.orderRepository.create(user);

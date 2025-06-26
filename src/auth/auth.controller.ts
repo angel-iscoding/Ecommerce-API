@@ -15,7 +15,7 @@ export class AuthController {
     @ApiResponse({ status: 201, description: 'User successfully created' })
     @ApiResponse({ status: 400, description: 'Bad request - Invalid data' })
     @HttpCode(HttpStatus.CREATED)
-    async signUp(@Body() signUpDto: SignUpDto): Promise<any> {
+    async signUp(@Body() signUpDto: SignUpDto): Promise<Omit<User, "password">> {
         try {
             if (signUpDto.password !== signUpDto.confirmPassword) {
                 throw new BadRequestException('Las contraseñas no coinciden');

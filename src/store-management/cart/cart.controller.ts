@@ -30,12 +30,11 @@ export class CartController {
                 isAuthenticated
             );    
 
-            if (isAuthenticated) {
-                return { 
-                    message: `Productos: ${data.products}. Agregados al carrito del usuario.`,
-                    id: userId,
-                };
-            }
+            return { 
+                message: `Productos: ${data.products}. Agregados al carrito del usuario.`,
+                id: userId,
+            };
+            
         } catch (error) {
             throw new BadRequestException('No se pudo agregar el producto al carrito: ' + error.message);
         }
