@@ -10,7 +10,7 @@ import { User } from './user.entity';
 import { UserDto } from 'src/database/users/user.dto';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiParam, ApiBody, ApiQuery } from '@nestjs/swagger';
 import { idParamDto } from 'src/database/idParamDto.dto';
-import { Request as ExpressRequest } from 'express';
+import { RequestWithUser } from 'src/config/request-with-user.interface';
 
 @ApiTags('Users')
 @ApiBearerAuth()
@@ -51,7 +51,7 @@ export class UsersController {
     @Put('put/:id')
     @UseGuards(AuthGuard)
     @ApiBearerAuth()
-    async updateUser(@Request() req: ExpressRequest , @Body() userDto: UserDto): Promise<{ message: string }> {
+    async updateUser(@Request() req: RequestWithUser , @Body() userDto: UserDto): Promise<{ message: string }> {
         try {
             const updatedUser: User = await this.usersService.updateUser(req.user.id, userDto);
             return { message: updatedUser.id };
@@ -64,7 +64,7 @@ export class UsersController {
     @UseGuards(AuthGuard)
     @UseInterceptors(DateAdderInterceptor)
     @ApiBearerAuth()
-    async deleteUser(@Request() req: ExpressRequest): Promise<{ message: string }> {
+    async deleteUser(@Request() req: RequestWithUser): Promise<{ message: string }> {
         try {
             await this.usersService.deleteUser(req.user.id);
             return { message: 'Usuario eliminado correctamente' };

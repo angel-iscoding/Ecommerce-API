@@ -16,7 +16,7 @@ import { PaymentsModule } from "./payments/payments.module"; // Importa el módu
     imports: [
         ConfigModule.forRoot({
             isGlobal: true,
-            envFilePath: '.env.development',
+            envFilePath: '.env', // Cambialo dependiendo del archivo .env que tengas
             load: [typeOrmConfig],
         }),
         TypeOrmModule.forRootAsync({

@@ -18,7 +18,7 @@ export class AuthGuard implements CanActivate {
       if (authType === 'Bearer' && token) {
         try {
           const payload: PayloadDto = this.jwtService.verify(token, { secret: process.env.JWT_SECRET });
-          request.user = payload; // Add user to request object for future use
+          request["user"] = payload; // Add user to request object for future use
           return true;
         } catch (error) {
           response.status(401).json({ message: 'Token no válido' });

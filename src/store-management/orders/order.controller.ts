@@ -5,8 +5,8 @@ import { Role } from 'src/config/role.enum';
 import { AuthGuard } from '../../auth/auth.guard';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { Roles } from 'src/config/role.decorator';
-import { Request as ExpressRequest } from 'express';
 import { Order } from './order.entity';
+import { RequestWithUser } from 'src/config/request-with-user.interface';
 
 @ApiTags('Orders')
 @ApiBearerAuth()
@@ -45,7 +45,7 @@ export class OrderController {
     @Get('orders')
     @UseGuards(AuthGuard)
     @ApiBearerAuth()
-    async getOrderOfUser(@Request() req: ExpressRequest): Promise< {message: string }> {
+    async getOrderOfUser(@Request() req: RequestWithUser): Promise< {message: string }> {
         try {
             const orders = await this.orderService.getOrdersOfUser(req.user.id);
             return { message: `Ordenes: ${orders}` };
