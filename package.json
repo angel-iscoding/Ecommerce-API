@@ -1,8 +1,8 @@
 {
-  "name": "ecommerce-slarz-y",
-  "version": "0.0.1",
-  "description": "",
-  "author": "",
+  "name": "ecommerce-nestjs",
+  "version": "0.0.2",
+  "description": "Ecommerce API backend built with NestJS, TypeORM, PostgreSQL, Redis, and Cloudinary support.",
+  "author": "angel_af07",
   "private": true,
   "license": "UNLICENSED",
   "scripts": {
