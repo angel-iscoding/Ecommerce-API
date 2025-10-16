@@ -1,5 +1,12 @@
-import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, JoinColumn, ManyToMany, JoinTable } from 'typeorm';
-import { Category } from 'src/store-management/categories/category.entity'; 
+import {
+  Entity,
+  Column,
+  PrimaryGeneratedColumn,
+  ManyToOne,
+  JoinColumn,
+  ManyToMany,
+} from 'typeorm';
+import { Category } from 'src/database/categories/category.entity';
 import { Cart } from '../cart/cart.entity';
 import { Order } from '../orders/order.entity';
 
@@ -18,7 +25,7 @@ export class Product {
   price: number;
 
   @Column()
-  stock: number; 
+  stock: number;
 
   @Column({ nullable: true, default: 'ruta/a/tu/imagen/por/defecto.jpg' })
   imgUrl: string;

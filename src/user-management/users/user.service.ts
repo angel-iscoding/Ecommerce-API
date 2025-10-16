@@ -1,67 +1,66 @@
-import { Injectable, NotFoundException, UnauthorizedException } from "@nestjs/common";
-import { UsersRepository } from "./user.repository";
-import { UserDto } from "src/database/users/user.dto";
+import { UserDto } from '@/database/users/user.dto';
+import { User } from '@/database/users/user.entity';
+import {
+  Injectable,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import * as bcrypt from 'bcryptjs';
-import { User } from "./user.entity";
-import { CartRepository } from "src/store-management/cart/cart.repository";
-import { Cart } from "src/store-management/cart/cart.entity";
+import { UsersRepository } from './user.repository';
 
 @Injectable()
 export class UsersService {
-    constructor (
-        private readonly usersRepository: UsersRepository,
-        private readonly cartRepository: CartRepository,
-    ) {}
+  constructor(private readonly usersRepository: UsersRepository) {}
 
-    async getAllUsers(page: number = 1, limit: number = 5): Promise<Omit<User[], 'password'>[]>  {
-        const users = await this.usersRepository.getAllUsers();
+  async getAllUsers(
+    page: number = 1,
+    limit: number = 5,
+  ): Promise<Omit<User[], 'password'>[]> {
+    const users = await this.usersRepository.getAllUsers();
 
-        const pages = []
+    const pages = [];
 
-        for (let i = page; i < page+1; i++) {
-            const skip = (i - 1) * limit;
-            const section = users.slice(skip, skip + limit);
+    for (let i = page; i < page + 1; i++) {
+      const skip = (i - 1) * limit;
+      const section = users.slice(skip, skip + limit);
 
-            pages.push({page: i, content: section})
-        }
-
-        return pages; 
+      pages.push({ page: i, content: section });
     }
 
-    async getUserById(id: string): Promise<Omit<User, "password" | null>> {
-        return await this.usersRepository.getUserById(id);
-    }
+    return pages;
+  }
 
-    async findByEmail(email: string): Promise<Omit<User, "password" | null>> {
-        return await this.usersRepository.findOneByEmail(email);
-    }
+  async getUserById(id: string): Promise<Omit<User, 'password' | null>> {
+    return await this.usersRepository.getUserById(id);
+  }
 
-    async comparePassword(email: string, password: string): Promise<User> {
-        const user = await this.usersRepository.findOneByEmail(email);
+  async findByEmail(email: string): Promise<Omit<User, 'password' | null>> {
+    return await this.usersRepository.findOneByEmail(email);
+  }
 
-        if (!user) throw new NotFoundException('Usuario no encontrado');
+  async comparePassword(email: string, password: string): Promise<User> {
+    const user = await this.usersRepository.findOneByEmail(email);
 
-        const isMatch = await bcrypt.compare(password, user.password);
+    if (!user) throw new NotFoundException('Usuario no encontrado');
 
-        if (!isMatch) throw new UnauthorizedException('Contraseña incorrecta');
+    const isMatch = await bcrypt.compare(password, user.password);
 
-        return user;
-    }
-    
+    if (!isMatch) throw new UnauthorizedException('Contraseña incorrecta');
 
-    async createUser(userDto: UserDto): Promise<User> {
-        const user: User = await this.usersRepository.create(userDto);
+    return user;
+  }
 
-        const cart: Cart = await this.cartRepository.create(user);
+  async createUser(userDto: UserDto): Promise<User> {
+    const user: User = await this.usersRepository.create(userDto);
 
-        return user;
-    }
+    return user;
+  }
 
-    async updateUser(id: string, updatedUser: UserDto):Promise<User> {
-        return await this.usersRepository.updateUser(id, updatedUser);
-    }
+  async updateUser(id: string, updatedUser: UserDto): Promise<User> {
+    return await this.usersRepository.updateUser(id, updatedUser);
+  }
 
-    async deleteUser(id: string): Promise<void> {
-        await await this.usersRepository.deleteUser(id);
-    }
+  async deleteUser(id: string): Promise<void> {
+    await await this.usersRepository.deleteUser(id);
+  }
 }

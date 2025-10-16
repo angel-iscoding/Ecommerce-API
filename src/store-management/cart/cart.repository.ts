@@ -1,91 +1,102 @@
-import { Repository } from "typeorm";
-import { InjectRepository } from "@nestjs/typeorm";
-import { Injectable, NotFoundException } from "@nestjs/common";
-import { Cart } from "src/store-management/cart/cart.entity";
-import { Product } from "../products/product.entity";
-import { User } from "src/user-management/users/user.entity";
+import { Cart } from '@/database/cart/cart.entity';
+import { Product } from '@/database/products/product.entity';
+import { User } from '@/database/users/user.entity';
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 
 @Injectable()
 export class CartRepository {
-    constructor(
-        @InjectRepository(Cart)
-        private cartRepository: Repository<Cart>
-    ) {}
+  constructor(
+    @InjectRepository(Cart)
+    private cartRepository: Repository<Cart>,
+  ) {}
 
-    async getAllCart(): Promise<Cart[]> {
-        return await this.cartRepository.find({
-            relations: ['products', 'user']
-        }); 
+  async getAllCart(): Promise<Cart[]> {
+    return await this.cartRepository.find({
+      relations: ['products', 'user'],
+    });
+  }
+
+  async getCartById(id: string): Promise<Cart> {
+    const cart: Cart = await this.cartRepository.findOne({
+      where: { id },
+      relations: ['products', 'user'],
+    });
+
+    if (!cart) {
+      throw new NotFoundException(`Cart with ID ${id} not found`);
     }
 
-    async getCartById(id: string): Promise<Cart> {
-        const cart: Cart = await this.cartRepository.findOne({
-            where: { id },
-            relations: ['products', 'user']
-        });
+    return cart;
+  }
 
-        if (!cart) {
-            throw new NotFoundException(`Cart with ID ${id} not found`);
-        }
+  async getCartByUserId(userId: string): Promise<Cart> {
+    const cart = await this.cartRepository.findOne({
+      where: { user: { id: userId } },
+      relations: ['products', 'user'],
+    });
 
-        return cart;
+    if (!cart) {
+      throw new NotFoundException(`Cart for user ${userId} not found`);
     }
 
-    async getCartByUserId(userId: string): Promise<Cart> {
-        const cart = await this.cartRepository.findOne({
-            where: { user: { id: userId } },
-            relations: ['products', 'user']
-        });
+    return cart;
+  }
 
-        if (!cart) {
-            throw new NotFoundException(`Cart for user ${userId} not found`);
-        }
+  async save(cart: Cart): Promise<Cart> {
+    return await this.cartRepository.save(cart);
+  }
 
-        return cart;
-    }
+  async create(user: User): Promise<Cart> {
+    const cart = this.cartRepository.create({ user });
+    return await this.cartRepository.save(cart);
+  }
 
-    async save(cart: Cart): Promise<Cart> {
-        return await this.cartRepository.save(cart);
-    }
+  async removeProductFromCart(
+    userId: string,
+    productId: string,
+  ): Promise<void> {
+    const cart = await this.getCartByUserId(userId);
 
-    async create(user: User): Promise<Cart> {
-        const cart = this.cartRepository.create({ user });
-        return await this.cartRepository.save(cart) 
-    }
+    cart.products = cart.products.filter((product) => product.id !== productId);
 
-    async removeProductFromCart(userId: string, productId: string): Promise<void> {
-        const cart = await this.getCartByUserId(userId);
-        
-        cart.products = cart.products.filter(product => product.id !== productId);
-        
-        // Recalcular el precio total
-        cart.price = cart.products.reduce((total, product) => total + product.price, 0);
-        
-        await this.save(cart);
-    }
+    // Recalcular el precio total
+    cart.price = cart.products.reduce(
+      (total, product) => total + product.price,
+      0,
+    );
 
-    async clearCart(cart: Cart): Promise<void> {
-        
-        cart.products = [];
-        cart.price = 0;
-        
-        await this.save(cart);
-    }
+    await this.save(cart);
+  }
 
-    async addProducts(cart: Cart, products: Product[]): Promise<Cart> {
-        cart.products = [...cart.products, ...products];
-        
-        // Recalcular el precio total
-        cart.price = cart.products.reduce((total, product) => total + product.price, 0);
-        
-        return await this.save(cart);
-    }
+  async clearCart(cart: Cart): Promise<void> {
+    cart.products = [];
+    cart.price = 0;
 
-    async updateCartPrice(cartId: string): Promise<void> {
-        const cart = await this.getCartById(cartId);
-        
-        cart.price = cart.products.reduce((total, product) => total + product.price, 0);
-        
-        await this.save(cart);
-    }
+    await this.save(cart);
+  }
+
+  async addProducts(cart: Cart, products: Product[]): Promise<Cart> {
+    cart.products = [...cart.products, ...products];
+
+    // Recalcular el precio total
+    cart.price = cart.products.reduce(
+      (total, product) => total + product.price,
+      0,
+    );
+
+    return await this.save(cart);
+  }
+
+  async updateCartPrice(cartId: string): Promise<void> {
+    const cart = await this.getCartById(cartId);
+
+    cart.price = cart.products.reduce(
+      (total, product) => total + product.price,
+      0,
+    );
+
+    await this.save(cart);
+  }
 }

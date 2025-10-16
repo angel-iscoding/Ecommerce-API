@@ -1,4 +1,14 @@
-import { IsString, IsEmail, IsNotEmpty, MinLength, MaxLength, Matches, IsNumber, IsBoolean, IsOptional, IsEnum } from 'class-validator';
+import {
+  IsString,
+  IsEmail,
+  IsNotEmpty,
+  MinLength,
+  MaxLength,
+  Matches,
+  IsNumber,
+  IsOptional,
+  IsEnum,
+} from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { Role } from 'src/config/role.enum';
 
@@ -18,9 +28,13 @@ export class SignUpDto {
   @IsString()
   @MinLength(8)
   @MaxLength(15)
-  @Matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*])[A-Za-z\d!@#$%^&*]{8,15}$/, {
-    message: 'La contraseña debe contener al menos una minúscula, una mayúscula, un número y un carácter especial (!@#$%^&*)',
-  })
+  @Matches(
+    /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*])[A-Za-z\d!@#$%^&*]{8,15}$/,
+    {
+      message:
+        'La contraseña debe contener al menos una minúscula, una mayúscula, un número y un carácter especial (!@#$%^&*)',
+    },
+  )
   password: string;
 
   @ApiProperty({ example: 'Password123!' })

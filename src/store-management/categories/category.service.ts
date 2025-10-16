@@ -1,40 +1,39 @@
+import { Category } from '@/database/categories/category.entity';
+import { CreateCategoryDto } from '@/database/categories/createCategoryDto';
 import { Injectable } from '@nestjs/common';
-import { Category } from 'src/store-management/categories/category.entity';
 import { CategoriesRepository } from './category.repository';
-import { CreateCategoryDto } from 'src/database/categories/createCategoryDto';
 
 @Injectable()
 export class CategoriesService {
-  constructor(
-    private categoriesRepository: CategoriesRepository,
-  ) {}
+  constructor(private categoriesRepository: CategoriesRepository) {}
 
   async getCategories(): Promise<Category[]> {
     return await this.categoriesRepository.getCategories();
   }
 
-  async createCategory(category: CreateCategoryDto) : Promise<Category> {
+  async createCategory(category: CreateCategoryDto): Promise<Category> {
     return await this.categoriesRepository.createCategory(category);
   }
 
-  async getById (id): Promise<Category | undefined> {
+  async getById(id): Promise<Category | undefined> {
     return await this.categoriesRepository.findById(id);
   }
 
-  async findByName (name: string): Promise<Category | undefined> {
+  async findByName(name: string): Promise<Category | undefined> {
     return await this.categoriesRepository.findByName(name);
   }
 
   async thisCategoryExist(name: string): Promise<boolean> {
-    if (await this.categoriesRepository.findByName(name)) return Promise.resolve(true); 
+    if (await this.categoriesRepository.findByName(name))
+      return Promise.resolve(true);
     return Promise.resolve(false);
   }
 
-  async deleteCategory (id: string): Promise<void> {
+  async deleteCategory(id: string): Promise<void> {
     await this.categoriesRepository.deleteCategory(id);
   }
 
-  async preloadCategories (): Promise<void> {
+  async preloadCategories(): Promise<void> {
     const preloadCategories: CreateCategoryDto[] = [
       { name: 'Electronics' },
       { name: 'Clothing' },
@@ -45,17 +44,17 @@ export class CategoriesService {
       { name: 'Beauty' },
       { name: 'Sports' },
       { name: 'Home Decor' },
-      { name: 'Jewelry' }, 
-      { name: "smartphone" },
-      { name: "monitor" },
-      { name: "keyboard" },
-      { name: "mouse"}
+      { name: 'Jewelry' },
+      { name: 'smartphone' },
+      { name: 'monitor' },
+      { name: 'keyboard' },
+      { name: 'mouse' },
     ];
 
     await Promise.all(
-      preloadCategories.map(category => 
-          this.categoriesRepository.createCategory(category)
-      )
+      preloadCategories.map((category) =>
+        this.categoriesRepository.createCategory(category),
+      ),
     );
   }
 }

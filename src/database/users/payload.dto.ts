@@ -1,23 +1,29 @@
-import { IsEmail, IsNotEmpty, IsNumber, IsOptional, IsUUID, isUUID } from "class-validator";
-import { Role } from "src/config/role.enum";
+import {
+  IsEmail,
+  IsNotEmpty,
+  IsNumber,
+  IsOptional,
+  IsUUID,
+} from 'class-validator';
+import { Role } from 'src/config/role.enum';
 
 export class PayloadDto {
-    @IsEmail()
-    @IsNotEmpty()
-    email: string;
+  @IsEmail()
+  @IsNotEmpty()
+  email: string;
 
-    @IsUUID()
-    @IsNotEmpty()
-    id: string;
+  @IsUUID()
+  @IsNotEmpty()
+  id: string;
 
-    @IsNotEmpty()
-    roles: Role[];
+  @IsNotEmpty()
+  roles: Role[];
 
-    @IsNumber()
-    @IsOptional()
-    iat?: number;
+  @IsNumber()
+  @IsOptional()
+  iat?: number;
 
-    @IsNumber()
-    @IsOptional()
-    exp?: number;
+  @IsNumber()
+  @IsOptional()
+  exp?: number;
 }

@@ -1,27 +1,26 @@
-import { forwardRef, Module } from "@nestjs/common";
-import { ProductsService } from "./product.service";
-import { ProductsController } from "./product.controller";
-import { ProductsRepository } from "./product.repository";
-import { TypeOrmModule } from "@nestjs/typeorm";
-import { Product } from "./product.entity";
-import { CategoriesModule } from "../categories/category.module";
+import { AuthGuard } from '@/auth/auth.guard';
+import { Product } from '@/database/products/product.entity';
+import { CategoriesModule } from '@/store-management/categories/category.module';
+import { UsersModule } from '@/user-management/users/user.module';
+import { forwardRef, Module } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
-import { AuthGuard } from "src/auth/auth.guard";
-import { UsersModule } from "src/user-management/users/user.module";
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { ProductsController } from './product.controller';
+import { ProductsRepository } from './product.repository';
+import { ProductsService } from './product.service';
 
 @Module({
-    imports: [
-        TypeOrmModule.forFeature([Product]),
-        CategoriesModule,
-        JwtModule.register({
-            secret: process.env.JWT_SECRET,
-            signOptions: { expiresIn: '1h' },
-        }),
-        forwardRef(() => UsersModule),
-    ],
-    providers: [ProductsService, ProductsRepository, AuthGuard],
-    controllers: [ProductsController],
-    exports: [ProductsService, ProductsRepository]
+  imports: [
+    TypeOrmModule.forFeature([Product]),
+    CategoriesModule,
+    JwtModule.register({
+      secret: process.env.JWT_SECRET,
+      signOptions: { expiresIn: '1h' },
+    }),
+    forwardRef(() => UsersModule),
+  ],
+  providers: [ProductsService, ProductsRepository, AuthGuard],
+  controllers: [ProductsController],
+  exports: [ProductsService, ProductsRepository],
 })
-export class ProductsModule {
-}
+export class ProductsModule {}

@@ -1,7 +1,7 @@
-import { Injectable, CanActivate, ExecutionContext } from '@nestjs/common';
+import { PayloadDto } from '@/database/users/payload.dto';
+import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { Request, Response } from 'express';
-import { PayloadDto } from 'src/database/users/payload.dto';
 
 @Injectable()
 export class AuthGuard implements CanActivate {
@@ -17,8 +17,10 @@ export class AuthGuard implements CanActivate {
 
       if (authType === 'Bearer' && token) {
         try {
-          const payload: PayloadDto = this.jwtService.verify(token, { secret: process.env.JWT_SECRET });
-          request["user"] = payload; // Add user to request object for future use
+          const payload: PayloadDto = this.jwtService.verify(token, {
+            secret: process.env.JWT_SECRET,
+          });
+          request['user'] = payload; // Add user to request object for future use
           return true;
         } catch (error) {
           response.status(401).json({ message: 'Token no válido' });
