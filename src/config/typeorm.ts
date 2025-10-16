@@ -3,15 +3,15 @@ import { DataSource, DataSourceOptions } from 'typeorm';
 
 const config = {
   type: 'postgres',
-  host: process.env.DB_HOST || 'localhost',
-  port: Number(process.env.DB_PORT) || 5432,
-  username: process.env.DB_USERNAME || 'postgres',
-  password: process.env.DB_PASSWORD || 'admin',
-  database: process.env.DB_NAME || 'demodb',
+  host: String(process.env.DB_HOST),
+  port: Number(process.env.DB_PORT),
+  username: String(process.env.POSTGRES_USER),
+  password: String(process.env.POSTGRES_PASSWORD),
+  database: String(process.env.POSTGRES_DB),
   autoLoadEntities: true,
   synchronize: true,
-  dropSchema: false, // Cambia esto a false para evitar perder datos en cada reinicio
-  logging: false, // Cambia esto a true para ver los logs de SQL
+  dropSchema: false, // Change this to false to drop data on turn off
+  logging: true, // Change this to see the logs of PostgreSQL
   entities: ['dist/**/*.entity{.ts,.js}'],
   migrations: ['dist/migrations/*{.js,.ts}'],
 };
