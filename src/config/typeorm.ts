@@ -9,7 +9,7 @@ const config = {
   password: String(process.env.POSTGRES_PASSWORD),
   database: String(process.env.POSTGRES_DB),
   autoLoadEntities: true,
-  synchronize: true,
+  synchronize: false,
   dropSchema: false, // Change this to false to drop data on turn off
   logging: true, // Change this to see the logs of PostgreSQL
   entities: ['dist/**/*.entity{.ts,.js}'],
