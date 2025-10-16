@@ -1,47 +1,82 @@
 services:
   db:
-    image: postgres:13
-    container_name: ecommerce-db 
+    image: postgres:13-alpine
+    container_name: ecommerce-db
     environment:
-      POSTGRES_USER: myuser
-      POSTGRES_PASSWORD: mypassword
-      POSTGRES_DB: mydatabase
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
     ports:
       - "5432:5432"
     volumes:
       - postgres-data:/var/lib/postgresql/data
+    networks:
+      - ecommerce-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    restart: unless-stopped
 
   redis:
-    image: redis:alpine
+    image: redis:7-alpine
     container_name: ecommerce-redis
+    command: redis-server --appendonly yes
+    user: redis
     ports:
       - "6379:6379"
     volumes:
       - redis-data:/data
-    command: redis-server --appendonly yes
+    networks:
+      - ecommerce-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    security_opt:
+      - no-new-privileges:true
+    read_only: true 
+    restart: unless-stopped
 
   app:
-    build: .
+    build: 
+      context: .
+      dockerfile: Dockerfile
     container_name: ecommerce-api
     ports:
-      - "3001:3000"
+      - "3000:3000"
     env_file:
       - .env
     environment:
-      DB_HOST: db
-      DB_PORT: 5432
-      DB_USERNAME: myuser
-      DB_PASSWORD: mypassword
-      DB_NAME: mydatabase
-      JWT_SECRET: tu_clave_secreta
-      REDIS_HOST: redis
-      REDIS_PORT: 6379
+      - NODE_ENV=production
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - DB_HOST=db
+      - REDIS_HOST=redis
     depends_on:
-      - db
-      - redis
-    volumes:
-      - .:/app
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - ecommerce-network
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /tmp
+      - /var/tmp
+      - /logs
+    restart: unless-stopped
 
 volumes:
   postgres-data:
+    driver: local
   redis-data:
+    driver: local
+
+networks:
+  ecommerce-network:
+    driver: bridge
