@@ -4,13 +4,14 @@ import {
   PrimaryGeneratedColumn,
   Column,
   ManyToOne,
-  JoinColumn,
   CreateDateColumn,
   UpdateDateColumn,
   OneToOne,
+  OneToMany,
 } from 'typeorm';
-import { Role } from './roles.entity';
 import { Cart } from './cart.entity';
+import { Role } from './role.entity';
+import { Order } from './order.entity';
 
 @Entity('users')
 export class User {
@@ -39,7 +40,6 @@ export class User {
   city: string;
 
   @ManyToOne(() => Role, (role) => role.users)
-  @JoinColumn({ name: 'roles' })
   role: Role;
 
   @CreateDateColumn({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
@@ -50,4 +50,7 @@ export class User {
 
   @OneToOne(() => Cart, (cart) => cart.user)
   cart: Cart;
+  
+  @OneToMany(() => Order, (order) => order.user)
+  orders: Order[];
 }
