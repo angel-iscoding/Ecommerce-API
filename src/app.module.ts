@@ -9,8 +9,12 @@ import { CartModule } from './store-management/cart/cart.module';
 import { CategoriesModule } from './store-management/categories/category.module';
 import { OrderModule } from './store-management/orders/order.module';
 import { ProductsModule } from './store-management/products/product.module';
-import { ProductsService } from './store-management/products/product.service';
 import { UsersModule } from './user-management/users/user.module';
+import { LoggerModule } from './utils/logger/logger.module';
+import { RoleSeeder } from './user-management/roles/role.seeder';
+import { CustomLogger } from './utils/logger/custom-logger.module';
+import { RoleService } from './user-management/roles/role.service';
+import { RoleModule } from './user-management/roles/role.module';
 
 @Module({
   imports: [
@@ -24,7 +28,9 @@ import { UsersModule } from './user-management/users/user.module';
       useFactory: (ConfigService: ConfigService) =>
         ConfigService.get('typeorm'),
     }),
+    LoggerModule,
     CartModule,
+    RoleModule,
     UsersModule,
     AuthModule,
     ProductsModule,
@@ -34,20 +40,22 @@ import { UsersModule } from './user-management/users/user.module';
     PaymentsModule,
   ],
   controllers: [],
-  providers: [],
+  providers: [RoleSeeder, RoleService, CustomLogger],
 })
 export class AppModule implements OnApplicationBootstrap {
+  [x: string]: any;
   constructor(
-    /* private readonly categoriesService: CategoriesService, */
-    private readonly productsService: ProductsService,
+    private readonly roleSeeder: RoleSeeder,
+    private readonly logger: CustomLogger,
   ) {}
 
   async onApplicationBootstrap() {
     try {
+      await this.roleSeeder.seed();
       /*  await this.categoriesService.preloadCategories(); */
-      await this.productsService.preloadProducts();
+      this.logger.log('Precarga de datos completada');
     } catch (error) {
-      console.error('Error durante precarga de datos', error);
+      this.logger.error('Error durante precarga de datos', error);
     }
   }
 }
