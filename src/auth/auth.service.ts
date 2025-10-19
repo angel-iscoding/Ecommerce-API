@@ -2,57 +2,44 @@ import { Injectable, NotFoundException, BadRequestException } from '@nestjs/comm
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcryptjs';
 import { PayloadDto } from '@/database/dto/payload.dto';
-import { User } from '@/database/entities/user.entity';
-import { UsersService } from 'src/user-management/users/user.service';
-import { RegisterDto } from '@/database/dto/register.dto';
-import { Role } from '@/database/entities/role.entity';
-import { LoginDto } from '@/database/dto/login.dto';
-import { RoleService } from '@/user-management/roles/role.service';
+import { UsersService } from '@/users-management/users/users.service';
+import { CreateUserRequestDto } from '@/database/dto/request/create-user-request.dto';
+import { RolesService } from '@/users-management/roles/roles.service';
+import { UserBaseResponseDto } from '@/database/dto/response/user-base-response.dto';
+import { LoginUserRequestDto } from '@/database/dto/request/login-user-request.dto';
 
 @Injectable()
 export class AuthService {
   constructor(
     private readonly usersService: UsersService,
     private readonly jwtService: JwtService,
-    private readonly rolesService: RoleService,
+    private readonly rolesService: RolesService,
   ) {}
 
-  async register(user: RegisterDto, role: Role): Promise<User> {
-    const hashedPassword = await bcrypt.hash(user.password, 10);
+  async register(userData: CreateUserRequestDto): Promise<{ user: UserBaseResponseDto; token: string }> {
+    const createdUser: UserBaseResponseDto = await this.usersService.create(userData);
 
-    const createdUser: User = await this.usersService.createUser(
-      {
-        name: user.name,
-        email: user.email,
-        password: hashedPassword,
-        address: user.address,
-        phone: Number(user.phone),
-        country: user.country,
-        city: user.city,
-      },
-      role,
-    );
+    const token = await this.login({
+      email: createdUser.email,
+      password: userData.password,
+    })    
 
-    return createdUser;
+    return { user: createdUser, token };
   }
 
-  async login(loginDto: LoginDto): Promise<string | null> {
+  async login(credentials: LoginUserRequestDto): Promise<string | null> {
     
-    const user: User = await this.usersService.searchCompleteUserByEmail(loginDto.email);
-
-    console.log('====================================');
-    console.log(user);
-    console.log('====================================');
+    const user = await this.usersService.findCompleteByEmail(credentials.email);
     
     if (!user) {
       throw new NotFoundException('User not found');
     }
 
-    if (!await bcrypt.compare(loginDto.password, user.password)) {
+    if (!await bcrypt.compare(credentials.password, user.password)) {
       throw new BadRequestException('Invalid credentials');
     }
 
-    const role = await this.rolesService.getRoleById(Number(user.role.id));
+    const role = await this.rolesService.findById(user.role.id);
 
     const payload: PayloadDto = {
       email: user.email,
