@@ -23,14 +23,14 @@ export class AuthController {
     @Body() user: CreateUserRequestDto,
   ): Promise<ApiResponseDto> {
     try {
-      const userCreated = await this.authService.register(user);
+      const { user: userCreated, token } = await this.authService.register(user);
       
       return {
         status: 'success',
         message: 'User created successfully',
         data: {
           user: userCreated,
-          //Agregar token de verificacion
+          token
         },
       };
     
