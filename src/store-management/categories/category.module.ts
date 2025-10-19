@@ -1,5 +1,5 @@
 import { AuthGuard } from '@/auth/auth.guard';
-import { Category } from '@/database/categories/category.entity';
+import { Category } from '@/database/entities/category.entity';
 import { Module } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
 import { TypeOrmModule } from '@nestjs/typeorm';

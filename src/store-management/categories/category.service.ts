@@ -1,5 +1,5 @@
-import { Category } from '@/database/categories/category.entity';
-import { CreateCategoryDto } from '@/database/categories/createCategoryDto';
+import { Category } from '@/database/entities/category.entity';
+import { CategoryDto } from '@/database/dto/category.dto';
 import { Injectable } from '@nestjs/common';
 import { CategoriesRepository } from './category.repository';
 
@@ -11,11 +11,11 @@ export class CategoriesService {
     return await this.categoriesRepository.getCategories();
   }
 
-  async createCategory(category: CreateCategoryDto): Promise<Category> {
+  async createCategory(category: CategoryDto): Promise<Category> {
     return await this.categoriesRepository.createCategory(category);
   }
 
-  async getById(id): Promise<Category | undefined> {
+  async getById(id: number): Promise<Category | undefined> {
     return await this.categoriesRepository.findById(id);
   }
 
@@ -29,32 +29,7 @@ export class CategoriesService {
     return Promise.resolve(false);
   }
 
-  async deleteCategory(id: string): Promise<void> {
+  async deleteCategory(id: number): Promise<void> {
     await this.categoriesRepository.deleteCategory(id);
-  }
-
-  async preloadCategories(): Promise<void> {
-    const preloadCategories: CreateCategoryDto[] = [
-      { name: 'Electronics' },
-      { name: 'Clothing' },
-      { name: 'Books' },
-      { name: 'Furniture' },
-      { name: 'Toys' },
-      { name: 'Groceries' },
-      { name: 'Beauty' },
-      { name: 'Sports' },
-      { name: 'Home Decor' },
-      { name: 'Jewelry' },
-      { name: 'smartphone' },
-      { name: 'monitor' },
-      { name: 'keyboard' },
-      { name: 'mouse' },
-    ];
-
-    await Promise.all(
-      preloadCategories.map((category) =>
-        this.categoriesRepository.createCategory(category),
-      ),
-    );
   }
 }

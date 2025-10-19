@@ -1,5 +1,5 @@
-import { Category } from '@/database/categories/category.entity';
-import { CreateCategoryDto } from '@/database/categories/createCategoryDto';
+import { Category } from '@/database/entities/category.entity';
+import { CategoryDto } from '@/database/dto/category.dto';
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -15,8 +15,11 @@ export class CategoriesRepository {
     return await this.categoriesRepository.find();
   }
 
-  async createCategory(category: CreateCategoryDto): Promise<Category> {
-    const newCategory = this.categoriesRepository.create(category);
+  async createCategory(category: CategoryDto): Promise<Category> {
+    const newCategory = this.categoriesRepository.create({
+      ...category,
+      products: [],
+    });
     return await this.categoriesRepository.save(newCategory);
   }
 
@@ -24,11 +27,11 @@ export class CategoriesRepository {
     return await this.categoriesRepository.findOne({ where: { name: name } });
   }
 
-  async findById(id: string): Promise<Category | undefined> {
+  async findById(id: number): Promise<Category | undefined> {
     return await this.categoriesRepository.findOne({ where: { id: id } });
   }
 
-  async deleteCategory(id: string): Promise<void> {
+  async deleteCategory(id: number): Promise<void> {
     const categoryToDelete = await this.findById(id);
     if (!categoryToDelete) return;
 

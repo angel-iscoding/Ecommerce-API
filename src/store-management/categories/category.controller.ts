@@ -1,9 +1,8 @@
 import { AuthGuard } from '@/auth/auth.guard';
 import { RolesGuard } from '@/auth/roles.guard';
 import { Roles } from '@/config/role.decorator';
-import { Role } from '@/config/role.enum';
-import { Category } from '@/database/categories/category.entity';
-import { CreateCategoryDto } from '@/database/categories/createCategoryDto';
+import { RoleNames } from '@/config/role-names.enum';
+import { Category } from '@/database/entities/category.entity';
 import {
   Body,
   Controller,
@@ -16,6 +15,7 @@ import {
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { CategoriesService } from './category.service';
+import { CategoryDto } from '@/database/dto/category.dto';
 
 @ApiTags('Categories')
 @ApiBearerAuth()
@@ -35,10 +35,10 @@ export class CategoriesController {
   }
 
   @Get(':id')
-  async getCategoryById(@Param('id') id: string): Promise<{ message: string }> {
+  async getCategoryById(@Param('id') id: number): Promise<Category> {
     try {
       const category: Category = await this.categoriesService.getById(id);
-      return { message: `Category: ${category}` };
+      return category;
     } catch (error) {
       throw new InternalServerErrorException(
         'No se pudo obtener la categoria: ' + error.message,
@@ -49,9 +49,9 @@ export class CategoriesController {
   @Post()
   @UseGuards(AuthGuard, RolesGuard)
   @ApiBearerAuth()
-  @Roles(Role.Admin)
+  @Roles(RoleNames.Admin)
   async createCategory(
-    @Body() createCategoryDto: CreateCategoryDto,
+    @Body() createCategoryDto: CategoryDto,
   ): Promise<{ message: string }> {
     try {
       if (
@@ -71,8 +71,8 @@ export class CategoriesController {
   @Delete(':id')
   @UseGuards(AuthGuard, RolesGuard)
   @ApiBearerAuth()
-  @Roles(Role.Admin)
-  async deleteCategory(@Param('id') id: string): Promise<{ message: string }> {
+  @Roles(RoleNames.Admin)
+  async deleteCategory(@Param('id') id: number): Promise<{ message: string }> {
     try {
       if (!(await this.categoriesService.getById(id)))
         throw new InternalServerErrorException('Esta categoria no existe');
@@ -83,20 +83,5 @@ export class CategoriesController {
         'No se pudo eliminar la categoria: ' + error.message,
       );
     }
-  }
-
-  @Post('seeder')
-  @UseGuards(AuthGuard)
-  @Roles(Role.Admin)
-  @ApiBearerAuth()
-  async seederCategories() {
-    if ((await this.categoriesService.getCategories()).length)
-      throw new InternalServerErrorException(
-        'Solo usar cuando las categorias esten vacias',
-      );
-
-    await this.categoriesService.preloadCategories();
-
-    return '¡Precarga realizada con exito!';
   }
 }
