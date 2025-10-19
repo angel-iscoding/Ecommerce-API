@@ -1,5 +1,5 @@
-import { UserDto } from '@/database/users/user.dto';
-import { User } from '@/database/users/user.entity';
+import { UserDto } from '@/database/dto/user.dto';
+import { User } from '@/database/entities/user.entity';
 import {
   Injectable,
   NotFoundException,
@@ -7,39 +7,34 @@ import {
 } from '@nestjs/common';
 import * as bcrypt from 'bcryptjs';
 import { UsersRepository } from './user.repository';
+import { Role } from '@/database/entities/role.entity';
 
 @Injectable()
 export class UsersService {
   constructor(private readonly usersRepository: UsersRepository) {}
 
-  async getAllUsers(
-    page: number = 1,
-    limit: number = 5,
-  ): Promise<Omit<User[], 'password'>[]> {
-    const users = await this.usersRepository.getAllUsers();
-
-    const pages = [];
-
-    for (let i = page; i < page + 1; i++) {
-      const skip = (i - 1) * limit;
-      const section = users.slice(skip, skip + limit);
-
-      pages.push({ page: i, content: section });
-    }
-
-    return pages;
+  async getAllUsers(): Promise<Omit<User, 'password'>[]> {
+    return await this.usersRepository.getAllUsers();
   }
 
-  async getUserById(id: string): Promise<Omit<User, 'password' | null>> {
+  async getUserById(id: string): Promise<Omit<User, 'password'> | null> {
     return await this.usersRepository.getUserById(id);
   }
 
-  async findByEmail(email: string): Promise<Omit<User, 'password' | null>> {
+  async findByEmail(email: string): Promise<Omit<User, 'password'> | null> {
     return await this.usersRepository.findOneByEmail(email);
   }
 
+  async searchCompleteUserById(id: string): Promise<User | null> {
+    return await this.usersRepository.searchCompleteUserById(id);
+  }
+
+  async searchCompleteUserByEmail(email: string): Promise<User | null> {
+    return await this.usersRepository.searchCompleteUserByEmail(email);
+  }
+
   async comparePassword(email: string, password: string): Promise<User> {
-    const user = await this.usersRepository.findOneByEmail(email);
+    const user = await this.usersRepository.searchCompleteUserById(email);
 
     if (!user) throw new NotFoundException('Usuario no encontrado');
 
@@ -50,14 +45,25 @@ export class UsersService {
     return user;
   }
 
-  async createUser(userDto: UserDto): Promise<User> {
-    const user: User = await this.usersRepository.create(userDto);
+  async createUser(user: UserDto, role: Role): Promise<User> {
+    const createdUser: User = await this.usersRepository.create(user, role);
 
-    return user;
+    return createdUser;
   }
 
-  async updateUser(id: string, updatedUser: UserDto): Promise<User> {
-    return await this.usersRepository.updateUser(id, updatedUser);
+  async updateUser(
+    user: User,
+    updatedUser: UserDto,
+  ): Promise<Omit<User, 'password'> | null> {
+    const updateData: Partial<User> = {
+      name: updatedUser.name,
+      address: updatedUser.address,
+      phone: updatedUser.phone,
+      country: updatedUser.country,
+      city: updatedUser.city,
+    };
+
+    return await this.usersRepository.updateUser(user, updateData);
   }
 
   async deleteUser(id: string): Promise<void> {

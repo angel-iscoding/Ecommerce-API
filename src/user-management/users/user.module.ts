@@ -7,17 +7,20 @@ import { JwtModule } from '@nestjs/jwt';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { CartRepository } from '@/store-management/cart/cart.repository';
 import { OrderRepository } from '@/store-management/orders/order.repository';
-import { Cart } from '@/database/cart/cart.entity';
-import { Order } from '@/database/orders/order.entity';
-import { User } from '@/database/users/user.entity';
+import { Cart } from '@/database/entities/cart.entity';
+import { Order } from '@/database/entities/order.entity';
+import { User } from '@/database/entities/user.entity';
 import { AuthGuard } from '@/auth/auth.guard';
 import { UsersService } from './user.service';
 import { UsersController } from './user.controller';
 import { UsersRepository } from './user.repository';
+import { Role } from '@/database/entities/role.entity';
+import { RoleService } from '../roles/role.service';
+import { RoleModule } from '../roles/role.module';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([User, Order, Cart]),
+    TypeOrmModule.forFeature([User, Order, Cart, Role]),
     JwtModule.register({
       secret: process.env.JWT_SECRET,
       signOptions: { expiresIn: '1h' },
@@ -26,8 +29,10 @@ import { UsersRepository } from './user.repository';
     forwardRef(() => ProductsModule),
     forwardRef(() => OrderModule),
     forwardRef(() => CartModule),
+    forwardRef(() => RoleModule),
   ],
   providers: [
+    RoleService,
     UsersService,
     UsersRepository,
     OrderRepository,
