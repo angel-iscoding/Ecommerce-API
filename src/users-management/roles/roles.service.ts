@@ -28,6 +28,11 @@ export class RolesService {
     return role;
   }
 
+  async thisRoleExist(name: RoleNames): Promise<boolean> {
+    const role = await this.RolesRepository.findByName(name);
+    return !!role;
+  }
+
   async getDefaultRole(): Promise<Role> {
     return this.RolesRepository.findByName(RoleNames.User);
   }
