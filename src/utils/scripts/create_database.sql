@@ -59,7 +59,7 @@ CREATE TABLE product (
     description TEXT NOT NULL,
     price DECIMAL(10,2) DEFAULT 0,
     stock INTEGER NOT NULL,
-    image_url VARCHAR DEFAULT 'ruta/a/tu/imagen/por/defecto.jpg',
+    imgUrl VARCHAR DEFAULT 'ruta/a/tu/imagen/por/defecto.jpg',
     category_id INTEGER REFERENCES category(id),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,

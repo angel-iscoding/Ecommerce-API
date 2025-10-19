@@ -44,7 +44,7 @@ INSERT INTO users (name, email, password, address, phone, country, city, roles) 
 ('Carlos López', 'carlos.lopez@email.com', 'hashed_password_101', 'Calle Secundaria 101', '+1234567893', 'España', 'Sevilla', 2);
 
 -- 7. Insertar productos
-INSERT INTO product (name, description, price, stock, image_url, category_id) VALUES
+INSERT INTO product (name, description, price, stock, imgUrl, category_id) VALUES
 ('iPhone 14', 'Smartphone Apple iPhone 14 con 128GB', 999.99, 50, '/images/iphone14.jpg', 1),
 ('Samsung Galaxy S23', 'Smartphone Samsung Galaxy S23 256GB', 849.99, 30, '/images/galaxy-s23.jpg', 1),
 ('Camiseta Básica', 'Camiseta de algodón 100% básica', 19.99, 100, '/images/camiseta-basica.jpg', 2),
