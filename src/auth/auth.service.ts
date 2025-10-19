@@ -1,43 +1,65 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcryptjs';
-import { Role } from 'src/config/role.enum';
-import { SignUpDto } from 'src/database/auth/sign-up.dto';
-import { PayloadDto } from 'src/database/users/payload.dto';
-import { User } from 'src/database/users/user.entity';
+import { PayloadDto } from '@/database/dto/payload.dto';
+import { User } from '@/database/entities/user.entity';
 import { UsersService } from 'src/user-management/users/user.service';
+import { RegisterDto } from '@/database/dto/register.dto';
+import { Role } from '@/database/entities/role.entity';
+import { LoginDto } from '@/database/dto/login.dto';
+import { RoleService } from '@/user-management/roles/role.service';
 
 @Injectable()
 export class AuthService {
   constructor(
     private readonly usersService: UsersService,
     private readonly jwtService: JwtService,
+    private readonly rolesService: RoleService,
   ) {}
 
-  async signUp(
-    signUpDto: SignUpDto,
-  ): Promise<Omit<User, 'password'> | undefined> {
-    const hashedPassword = await bcrypt.hash(signUpDto.password, 10);
+  async register(user: RegisterDto, role: Role): Promise<User> {
+    const hashedPassword = await bcrypt.hash(user.password, 10);
 
-    const isAdmin: boolean = signUpDto.role === Role.Admin;
+    const createdUser: User = await this.usersService.createUser(
+      {
+        name: user.name,
+        email: user.email,
+        password: hashedPassword,
+        address: user.address,
+        phone: Number(user.phone),
+        country: user.country,
+        city: user.city,
+      },
+      role,
+    );
 
-    const user: User = await this.usersService.createUser({
-      ...signUpDto,
-      password: hashedPassword,
-      admin: isAdmin,
-    });
-
-    return user;
+    return createdUser;
   }
 
-  async signIn(email: string, password: string): Promise<string | null> {
-    const user: User = await this.usersService.comparePassword(email, password);
+  async login(loginDto: LoginDto): Promise<string | null> {
+    
+    const user: User = await this.usersService.searchCompleteUserByEmail(loginDto.email);
+
+    console.log('====================================');
+    console.log(user);
+    console.log('====================================');
+    
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    if (!await bcrypt.compare(loginDto.password, user.password)) {
+      throw new BadRequestException('Invalid credentials');
+    }
+
+    const role = await this.rolesService.getRoleById(Number(user.role.id));
 
     const payload: PayloadDto = {
       email: user.email,
       id: user.id,
-      roles: user.roles,
+      role: role.name,
     };
+    console.log(payload);
     return this.jwtService.sign(payload, {
       secret: `${process.env.JWT_SECRET}`,
     });

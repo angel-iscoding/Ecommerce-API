@@ -1,4 +1,4 @@
-import { PayloadDto } from '@/database/users/payload.dto';
+import { PayloadDto } from '@/database/dto/payload.dto';
 import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { Request, Response } from 'express';

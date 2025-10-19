@@ -1,6 +1,6 @@
-import { SignInDto } from '@/database/auth/sign-in.dto';
-import { SignUpDto } from '@/database/auth/sign-up.dto';
-import { User } from '@/database/users/user.entity';
+import { LoginDto } from '@/database/dto/login.dto';
+import { RegisterDto } from '@/database/dto/register.dto';
+import { User } from '@/database/entities/user.entity';
 import {
   BadRequestException,
   Body,
@@ -8,27 +8,49 @@ import {
   HttpCode,
   HttpStatus,
   Post,
+  Request,
 } from '@nestjs/common';
-import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { CustomLogger } from '@/utils/logger/custom-logger.module';
 import { AuthService } from './auth.service';
+import { RoleService } from '@/user-management/roles/role.service';
+import { ContectDto } from '@/database/dto/content.dto';
 
-@ApiTags('Authentication')
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  private readonly logger = new CustomLogger();
 
-  @Post('signup')
-  @ApiOperation({ summary: 'Register a new user' })
-  @ApiResponse({ status: 201, description: 'User successfully created' })
-  @ApiResponse({ status: 400, description: 'Bad request - Invalid data' })
-  @HttpCode(HttpStatus.CREATED)
-  async signUp(@Body() signUpDto: SignUpDto): Promise<Omit<User, 'password'>> {
+  constructor(
+    private readonly authService: AuthService,
+    private readonly rolesService: RoleService,
+  ) {}
+
+  @Post('register')
+  async register(
+    @Request() req,
+    @Body() user: RegisterDto,
+  ): Promise<ContectDto> {
+    this.logger.logRequest(req);
     try {
-      if (signUpDto.password !== signUpDto.confirmPassword) {
+      if (user.password !== user.confirmPassword) {
         throw new BadRequestException('Las contraseñas no coinciden');
       }
-      const user = await this.authService.signUp(signUpDto);
-      return user;
+
+      const role = await this.rolesService.getRoleById(1);
+
+      if (role === null) {
+        throw new BadRequestException("Role does't exist");
+      }
+
+      const userCreated: User = await this.authService.register(user, role);
+      
+      return {
+        status: 'success',
+        message: 'User created successfully',
+        data: {
+          user: userCreated,
+        },
+      };
+    
     } catch (error) {
       throw new BadRequestException(
         'No se pudo crear el usuario. Error: ' + error.message,
@@ -36,24 +58,24 @@ export class AuthController {
     }
   }
 
-  @Post('signin')
-  @ApiOperation({ summary: 'User login' })
-  @ApiResponse({ status: 200, description: 'Login successful', type: Object })
-  @ApiResponse({
-    status: 400,
-    description: 'Bad request - Invalid credentials',
-  })
+  @Post('login')
   @HttpCode(HttpStatus.OK)
-  async signIn(
-    @Body() loginUserDto: SignInDto,
-  ): Promise<{ access_token: string }> {
+  async login(
+    @Request() req,
+    @Body() loginUserDto: LoginDto,
+  ): Promise<ContectDto> {
+    this.logger.logRequest(req);
     const { email, password } = loginUserDto;
-    const token = await this.authService.signIn(email, password);
+    const token = await this.authService.login({email, password});
 
     if (!token) {
       throw new BadRequestException('Email o contraseña incorrectos');
     }
 
-    return { access_token: token };
+    return {
+      status: 'success',
+      message: 'User logged in successfully',
+      data: { access_token: token },
+    };
   }
 }
