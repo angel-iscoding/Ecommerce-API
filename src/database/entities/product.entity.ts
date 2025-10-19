@@ -33,10 +33,11 @@ export class Product {
   stock: number;
 
   @Column({
+    name: 'imgUrl',
     type: 'varchar',
     default: 'ruta/a/tu/imagen/por/defecto.jpg',
   })
-  image_url: string;
+  imgUrl: string;
 
   @ManyToOne(() => Category, (category) => category.products)
   @JoinColumn({ name: 'category_id' })
