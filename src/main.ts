@@ -2,10 +2,12 @@ import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { AppModule } from './app.module';
 import { loggerGlobal } from './utils/middlewares/logger.middleware';
+import { json } from 'express';
 
 async function bootstrap() {
   console.log(process.env.PORT);
   const app = await NestFactory.create(AppModule);
+  app.use(json());
   app.use(loggerGlobal);
   const config = new DocumentBuilder()
     .setTitle('Ecommerce API')
