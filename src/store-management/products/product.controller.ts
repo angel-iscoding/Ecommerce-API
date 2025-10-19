@@ -1,34 +1,33 @@
 import { AuthGuard } from '@/auth/auth.guard';
 import { RolesGuard } from '@/auth/roles.guard';
 import { Roles } from '@/config/role.decorator';
-import { Role } from '@/config/role.enum';
-import { ProductDto } from '@/database/products/product.dto';
-import { Product } from '@/database/products/product.entity';
+import { RoleNames } from '@/config/role-names.enum';
+import { ProductDto } from '@/database/dto/product.dto';
+import { Product } from '@/database/entities/product.entity';
 import { DateAdderInterceptor } from '@/utils/interceptors/date-adder.interceptor';
 import {
-    BadRequestException,
-    Body,
-    Controller,
-    Delete,
-    Get,
-    InternalServerErrorException,
-    Param,
-    Post,
-    Put,
-    UseGuards,
-    UseInterceptors,
+  BadRequestException,
+  Body,
+  Controller,
+  Delete,
+  Get,
+  InternalServerErrorException,
+  Param,
+  Post,
+  Put,
+  UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiProperty, ApiTags } from '@nestjs/swagger';
-import { IsUUID } from 'class-validator';
+// id is numeric now
 import { ProductsService } from './product.service';
 
 class ProductIdParam {
   @ApiProperty({
-    description: 'UUID del producto',
-    example: '123e4567-e89b-12d3-a456-426614174000',
+    description: 'Numeric id del producto',
+    example: 1,
   })
-  @IsUUID()
-  id: string;
+  id: number;
 }
 
 @ApiTags('Products')
@@ -49,10 +48,10 @@ export class ProductsController {
   }
 
   @Get(':id')
-  async getProductById(@Param('id') id: string): Promise<{ message: string }> {
+  async getProductById(@Param('id') id: number): Promise<Product> {
     try {
       const product: Product = await this.productsService.getProductById(id);
-      return { message: `Producto: ${product}` };
+      return product;
     } catch (error) {
       throw new BadRequestException(
         'No se pudo obtener el producto: ' + error.message,
@@ -63,7 +62,7 @@ export class ProductsController {
   @Post('post')
   @ApiBearerAuth()
   @UseGuards(AuthGuard)
-  @Roles(Role.Admin, Role.Trader)
+  @Roles(RoleNames.Admin, RoleNames.Trader)
   @UseInterceptors(DateAdderInterceptor)
   async createProduct(
     @Body() product: ProductDto,
@@ -79,24 +78,10 @@ export class ProductsController {
     }
   }
 
-  @Post('seeder')
-  @UseGuards(AuthGuard)
-  @Roles(Role.Admin, Role.Trader)
-  @ApiBearerAuth()
-  async seederProducts() {
-    if ((await this.productsService.getAllProducts()).length) {
-      throw new InternalServerErrorException(
-        'Solo usar cuando los productos estén vacíos',
-      );
-    }
-    await this.productsService.preloadProducts();
-    return '¡Precarga realizada con éxito!';
-  }
-
   @Put('put/:id')
   @ApiBearerAuth()
   @UseGuards(AuthGuard, RolesGuard)
-  @Roles(Role.Admin, Role.Trader)
+  @Roles(RoleNames.Admin, RoleNames.Trader)
   async updateProduct(
     @Param() params: ProductIdParam,
     @Body() product: ProductDto,
@@ -106,7 +91,7 @@ export class ProductsController {
         params.id,
         product,
       );
-      return { message: `Producto: ${updatedProduct}` };
+      return { message: `Producto actualizado: ${updatedProduct.id}` };
     } catch (error) {
       throw new BadRequestException(
         'No se pudo actualizar el producto: ' + error.message,
@@ -118,7 +103,7 @@ export class ProductsController {
   @ApiBearerAuth()
   @UseInterceptors(DateAdderInterceptor)
   @UseGuards(AuthGuard, RolesGuard)
-  @Roles(Role.Admin, Role.Trader)
+  @Roles(RoleNames.Admin, RoleNames.Trader)
   async deleteProduct(
     @Param() params: ProductIdParam,
   ): Promise<{ message: string }> {

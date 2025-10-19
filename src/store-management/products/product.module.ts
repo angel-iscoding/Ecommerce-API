@@ -1,5 +1,7 @@
 import { AuthGuard } from '@/auth/auth.guard';
-import { Product } from '@/database/products/product.entity';
+import { Product } from '@/database/entities/product.entity';
+import { Category } from '@/database/entities/category.entity';
+import { CartItem } from '@/database/entities/cart-item.entity';
 import { CategoriesModule } from '@/store-management/categories/category.module';
 import { UsersModule } from '@/user-management/users/user.module';
 import { forwardRef, Module } from '@nestjs/common';
@@ -11,7 +13,7 @@ import { ProductsService } from './product.service';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Product]),
+    TypeOrmModule.forFeature([Product, Category, CartItem]),
     CategoriesModule,
     JwtModule.register({
       secret: process.env.JWT_SECRET,
