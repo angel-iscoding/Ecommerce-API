@@ -7,7 +7,7 @@ import {
   ParseIntPipe,
 } from '@nestjs/common';
 import { CloudService } from './cloud.service';
-import { ProductsService } from '../store-management/products/product.service';
+import { ProductsService } from '../store-management/products/products.service';
 import { FileValidationPipe } from '../utils/pipes/file-validation.pipe';
 import { FileInterceptor } from '@nestjs/platform-express';
 import {
@@ -35,10 +35,10 @@ export class CloudController {
   @UseInterceptors(FileInterceptor('file'))
   async uploadImage(
     @UploadedFile(new FileValidationPipe()) file: Express.Multer.File,
-    @Param('id', ParseIntPipe) productId: number,
+    @Param('id', ParseIntPipe) productid: string,
   ) {
     const imageUrl = await this.cloudService.uploadImage(file);
-    await this.productsService.updateProductImage(productId, imageUrl);
+    await this.productsService.updateProductImage(productid, imageUrl);
     return { imageUrl };
   }
 }
