@@ -1,4 +1,4 @@
-import { Order } from '@/database/orders/order.entity';
+import { Order } from '@/database/entities/order.entity';
 import { CartModule } from '@/store-management/cart/cart.module';
 import { ProductsModule } from '@/store-management/products/product.module';
 import { UsersModule } from '@/user-management/users/user.module';

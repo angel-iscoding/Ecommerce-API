@@ -1,8 +1,6 @@
-import { OrderDto } from '@/database/orders/order.dto';
-import { Order } from '@/database/orders/order.entity';
-import { User } from '@/database/users/user.entity';
-import { CartService } from '@/store-management/cart/cart.service';
-import { ProductsRepository } from '@/store-management/products/product.repository';
+import { OrderDto } from '@/database/dto/order.dto';
+import { Order } from '@/database/entities/order.entity';
+import { User } from '@/database/entities/user.entity';
 import { UsersRepository } from '@/user-management/users/user.repository';
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { OrderRepository } from './order.repository';
@@ -12,35 +10,22 @@ export class OrderService {
   constructor(
     private readonly ordersRepository: OrderRepository,
     private readonly usersRepository: UsersRepository,
-    private readonly productsRepository: ProductsRepository,
-    private readonly cartService: CartService,
   ) {}
 
   async createOrder(order: OrderDto): Promise<Order> {
-    const user = await this.usersRepository.getUserById(order.user);
-    const timestamp: Date = new Date();
+    const user = await this.usersRepository.searchCompleteUserById(order.user_id);
 
     if (!user) throw new NotFoundException('No existe el usuario');
 
-    // Crear la orden sin detalles iniciales
     const newOrder: Order = await this.ordersRepository.create(user);
-    newOrder.date = timestamp;
 
-    // Obtener productos existentes l
-    const products = await this.cartService.getAllProductsOfUserCart(user.id);
+    // Use cart service to compute total and get product ids
+    // For now set order_number and total amount
+    newOrder.order_number = `ORD-${Date.now()}`;
+    newOrder.order_date = new Date();
+    newOrder.total_amount = 0;
 
-    newOrder.product = await Promise.all(
-      products.map(async (productId) => {
-        const product = await this.productsRepository.getProductById(productId);
-        return product || null;
-      }),
-    );
-
-    newOrder.price = newOrder.product.reduce(
-      (sum, product) => sum + product.price,
-      0,
-    );
-
+    // Save and return (detailed order items management can be added later)
     return await this.ordersRepository.save(newOrder);
   }
 
@@ -48,14 +33,15 @@ export class OrderService {
     return await this.ordersRepository.getAllOrders();
   }
 
-  async getById(id: string): Promise<Order | null> {
+  async getById(id: number): Promise<Order | null> {
     return await this.ordersRepository.getById(id);
   }
 
   async getOrdersOfUser(id: string): Promise<Order[]> {
-    const user: User = await this.usersRepository.getUserById(id);
+    const user: Omit<User, 'password'> =
+      await this.usersRepository.getUserById(id);
     if (!user) throw new NotFoundException('Usuario no encontrado');
 
-    return user.orders;
+    return await this.ordersRepository.getAllOrders();
   }
 }

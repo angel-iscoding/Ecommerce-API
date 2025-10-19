@@ -1,9 +1,9 @@
 import { AuthGuard } from '@/auth/auth.guard';
 import { RequestWithUser } from '@/config/request-with-user.interface';
 import { Roles } from '@/config/role.decorator';
-import { Role } from '@/config/role.enum';
+import { RoleNames } from '@/config/role-names.enum';
 import { idParamDto } from '@/database/idParamDto.dto';
-import { Order } from '@/database/orders/order.entity';
+import { Order } from '@/database/entities/order.entity';
 import {
   BadRequestException,
   Controller,
@@ -24,7 +24,7 @@ export class OrderController {
 
   @Get()
   @UseGuards(AuthGuard)
-  @Roles(Role.Admin)
+  @Roles(RoleNames.Admin)
   @ApiBearerAuth()
   async getAllOrders(): Promise<Order[]> {
     try {
@@ -38,15 +38,15 @@ export class OrderController {
 
   @Get(':id')
   @UseGuards(AuthGuard)
-  @Roles(Role.Admin)
+  @Roles(RoleNames.Admin)
   @ApiBearerAuth()
-  async getOrder(@Param() params: idParamDto): Promise<{ message: string }> {
+  async getOrder(@Param() params: idParamDto): Promise<Order> {
     try {
-      const order = await this.orderService.getById(params.id);
+      const order = await this.orderService.getById(params.id as any);
       if (!order) {
         throw new NotFoundException('Orden no encontrada');
       }
-      return { message: `Orden: ${order}` };
+      return order;
     } catch (error) {
       throw new BadRequestException(
         'No se pudo obtener la orden: ' + error.message,
@@ -57,12 +57,10 @@ export class OrderController {
   @Get('orders')
   @UseGuards(AuthGuard)
   @ApiBearerAuth()
-  async getOrderOfUser(
-    @Request() req: RequestWithUser,
-  ): Promise<{ message: string }> {
+  async getOrderOfUser(@Request() req: RequestWithUser): Promise<Order[]> {
     try {
       const orders = await this.orderService.getOrdersOfUser(req.user.id);
-      return { message: `Ordenes: ${orders}` };
+      return orders;
     } catch (error) {
       throw new BadRequestException(
         'No se pudo obtener las ordenes del usuario: ' + error.message,
