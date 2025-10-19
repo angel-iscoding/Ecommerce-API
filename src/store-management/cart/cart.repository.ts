@@ -1,6 +1,6 @@
-import { Cart } from '@/database/cart/cart.entity';
-import { Product } from '@/database/products/product.entity';
-import { User } from '@/database/users/user.entity';
+import { Cart } from '@/database/entities/cart.entity';
+import { Product } from '@/database/entities/product.entity';
+import { User } from '@/database/entities/user.entity';
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -14,14 +14,14 @@ export class CartRepository {
 
   async getAllCart(): Promise<Cart[]> {
     return await this.cartRepository.find({
-      relations: ['products', 'user'],
+      relations: ['cartItems', 'user'],
     });
   }
 
-  async getCartById(id: string): Promise<Cart> {
+  async getCartById(id: number): Promise<Cart> {
     const cart: Cart = await this.cartRepository.findOne({
       where: { id },
-      relations: ['products', 'user'],
+      relations: ['cartItems', 'cartItems.product', 'user'],
     });
 
     if (!cart) {
@@ -34,7 +34,7 @@ export class CartRepository {
   async getCartByUserId(userId: string): Promise<Cart> {
     const cart = await this.cartRepository.findOne({
       where: { user: { id: userId } },
-      relations: ['products', 'user'],
+      relations: ['cartItems', 'cartItems.product', 'user'],
     });
 
     if (!cart) {
@@ -55,48 +55,45 @@ export class CartRepository {
 
   async removeProductFromCart(
     userId: string,
-    productId: string,
+    productId: number,
   ): Promise<void> {
     const cart = await this.getCartByUserId(userId);
 
-    cart.products = cart.products.filter((product) => product.id !== productId);
-
-    // Recalcular el precio total
-    cart.price = cart.products.reduce(
-      (total, product) => total + product.price,
-      0,
+    // Remove cartItems referencing productId
+    cart.cartItems = (cart.cartItems || []).filter(
+      (ci) => ci.product.id !== productId,
     );
 
     await this.save(cart);
   }
 
   async clearCart(cart: Cart): Promise<void> {
-    cart.products = [];
-    cart.price = 0;
+    cart.cartItems = [];
 
     await this.save(cart);
   }
 
   async addProducts(cart: Cart, products: Product[]): Promise<Cart> {
-    cart.products = [...cart.products, ...products];
-
-    // Recalcular el precio total
-    cart.price = cart.products.reduce(
-      (total, product) => total + product.price,
-      0,
+    // create cartItems from products and append (set unit_price and quantity)
+    const newItems = products.map(
+      (p) => ({ product: p, unit_price: p.price, quantity: 1 }) as any,
     );
+    cart.cartItems = [...(cart.cartItems || []), ...newItems];
 
     return await this.save(cart);
   }
 
-  async updateCartPrice(cartId: string): Promise<void> {
+  async updateCartPrice(cartId: number): Promise<number> {
     const cart = await this.getCartById(cartId);
 
-    cart.price = cart.products.reduce(
-      (total, product) => total + product.price,
+    // calculate total from cartItems (unit_price * quantity)
+    const total = (cart.cartItems || []).reduce(
+      (sum, ci) =>
+        sum + (ci.unit_price ?? ci.product?.price ?? 0) * (ci.quantity ?? 1),
       0,
     );
 
-    await this.save(cart);
+    // return computed total (don't assign to a non-existent column)
+    return total;
   }
 }

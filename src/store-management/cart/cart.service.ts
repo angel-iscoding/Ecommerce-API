@@ -1,13 +1,14 @@
-import { Cart } from '@/database/cart/cart.entity';
-import { Order } from '@/database/orders/order.entity';
-import { Product } from '@/database/products/product.entity';
-import { User } from '@/database/users/user.entity';
+import { Cart } from '@/database/entities/cart.entity';
+import { Order } from '@/database/entities/order.entity';
+import { Product } from '@/database/entities/product.entity';
+import { User } from '@/database/entities/user.entity';
 import { OrderRepository } from '@/store-management/orders/order.repository';
 import { ProductsRepository } from '@/store-management/products/product.repository';
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { UsersRepository } from 'src/user-management/users/user.repository';
 import { CartRedisService } from './cart-redis.service';
 import { CartRepository } from './cart.repository';
+import { TemporaryCart } from './cart-redis.service';
 
 @Injectable()
 export class CartService {
@@ -24,32 +25,31 @@ export class CartService {
   }
 
   async thisUserExist(userId: string): Promise<boolean> {
-    const user: User | undefined =
+    const user: Omit<User, 'password'> | undefined =
       await this.userRepository.getUserById(userId);
-    return user ? true : false;
+    return !!user;
   }
 
-  async getCart(cartId: string, isAuthenticated: boolean): Promise<Cart> {
-    if (isAuthenticated) return await this.cartRepository.getCartById(cartId);
+  async getCart(cartId: string, isAuthenticated: boolean): Promise<Cart | any> {
+    if (isAuthenticated)
+      return await this.cartRepository.getCartByUserId(cartId);
+
     const cartTemporaly = await this.cartRedisService.getTemporaryCart(cartId);
-
     if (!cartTemporaly) throw new NotFoundException('Carrito no encontrado');
-
     return cartTemporaly;
   }
 
   async getCartByUser(id: string): Promise<Cart | undefined> {
     const user = await this.userRepository.getUserById(id);
     if (!user) throw new NotFoundException('Usuario no encontrado');
-
     return user.cart;
   }
 
   async addProductToCart(
     userId: string,
-    productId: string[],
+    productId: number[],
     isAuthenticated: boolean,
-  ): Promise<void> {
+  ): Promise<Cart | TemporaryCart> {
     const products = await Promise.all(
       productId.map(async (id) => {
         const product = await this.productRepostory.getProductById(id);
@@ -60,119 +60,85 @@ export class CartService {
     );
 
     if (isAuthenticated) {
-      // Usuario autenticado: solo guardar en DB
       await this.addProductToUserCart(userId, productId);
-    } else {
-      // Usuario no autenticado: solo guardar en Redis
-      const temporaryCart =
-        await this.cartRedisService.getTemporaryCart(userId);
-      const updatedProducts = [...temporaryCart.products, ...products];
-      await this.cartRedisService.updateTemporaryCart(userId, updatedProducts);
+      return;
     }
+
+    const temporaryCart: TemporaryCart =
+      await this.cartRedisService.getTemporaryCart(userId);
+    const updatedProducts = [...temporaryCart.products, ...products];
+
+    return await this.cartRedisService.updateTemporaryCart(
+      userId,
+      updatedProducts as any,
+    );
   }
 
-  async addProductToUserCart(id: string, productId: string[]): Promise<Cart> {
-    const cart = await this.cartRepository.getCartById(id);
-
+  async addProductToUserCart(id: string, productId: number[]): Promise<Cart> {
+    const cart = await this.cartRepository.getCartByUserId(id);
     if (!cart) throw new NotFoundException('Error al encontrar el usuario');
 
-    // Verificar si el carrito existe
+    const validProducts: Product[] = [];
+    for (const currentProductId of productId) {
+      const product =
+        await this.productRepostory.getProductById(currentProductId);
+      if (product) validProducts.push(product);
+    }
 
-    const validProducts = await Promise.all(
-      productId.map(async (currentProduct) => {
-        const product =
-          await this.productRepostory.getProductById(currentProduct);
-        if (!product) return;
-        return product;
-      }),
+    const updated = await this.cartRepository.addProducts(cart, validProducts);
+    return updated;
+  }
+
+  async buyCart(userId: string): Promise<Order> {
+    const user: User = await this.userRepository.searchCompleteUserById(userId);
+    if (!user) throw new NotFoundException('Usuario no encontrado');
+
+    const cart: Cart = await this.cartRepository.getCartByUserId(user.id);
+    if (!cart) throw new NotFoundException('Carrito no encontrado');
+
+    const total = (cart.cartItems || []).reduce(
+      (sum, ci) =>
+        sum + (ci.unit_price ?? ci.product?.price ?? 0) * (ci.quantity ?? 1),
+      0,
     );
 
-    for (const currentProduct of validProducts) {
-      if (currentProduct) {
-        cart.products.push(currentProduct);
+    for (const ci of cart.cartItems || []) {
+      if (ci.product && ci.product.stock && ci.product.stock > 0) {
+        await this.productRepostory.downStock(ci.product);
       }
     }
 
-    // Recalcular el precio total del carrito
-    cart.price = Number(
-      cart.products
-        .reduce((total, currentProduct) => {
-          return total + Number(currentProduct.price);
-        }, 0)
-        .toFixed(2),
+    const order: Order = await this.orderRepository.create(user);
+    order.order_number = `ORD-${Date.now()}`;
+    order.order_date = new Date();
+    order.total_amount = total;
+    order.shipping_address = user.address;
+
+    await this.orderRepository.save(order);
+    await this.cartRepository.clearCart(cart);
+    return order;
+  }
+
+  async deleteProduct(id: string, productId: number[]): Promise<Cart> {
+    const user = await this.userRepository.getUserById(id);
+    if (!user) throw new NotFoundException('Error al encontrar el usuario');
+
+    const cart = await this.cartRepository.getCartByUserId(user.id);
+    if (!cart) throw new NotFoundException('Carrito no encontrado');
+
+    cart.cartItems = (cart.cartItems || []).filter(
+      (ci) => !productId.includes(ci.product.id),
     );
 
     return await this.cartRepository.save(cart);
   }
 
-  async buyCart(userId: string): Promise<Order> {
-    const user: User = await this.userRepository.getUserById(userId);
-    if (!user) throw new NotFoundException('Usuario no encontrado');
-    const cart: Cart = await this.cartRepository.getCartById(user.id);
-    if (!cart) throw new NotFoundException('Carrito no encontrado');
-
-    // Lógica para realizar la compra
-    // ...
-
-    // Limpiar carrito
-
-    cart.products.forEach(async (product) => {
-      if (product.stock !== 0) await this.productRepostory.downStock(product);
-    });
-
-    const order: Order = await this.orderRepository.create(user);
-
-    order.date = new Date();
-    order.product = cart.products;
-    order.price = cart.price;
-    order.status = 'pending';
-
-    await this.orderRepository.save(order);
-
-    await this.cartRepository.clearCart(cart);
-
-    return order;
-  }
-
-  async deleteProduct(id: string, productId: string[]): Promise<Cart> {
-    const user = await this.userRepository.getUserById(id);
-
-    if (!user) throw new NotFoundException('Error al encontrar el usuario');
-
-    const productsToDelete: Product[] = await Promise.all(
-      productId.map(async (product) => {
-        const currentProduct: Product =
-          await this.productRepostory.getProductById(product);
-
-        if (!currentProduct) return;
-
-        return currentProduct;
-      }),
-    );
-
-    user.cart.products.filter(
-      (clientProduct) =>
-        !productsToDelete.some(
-          (productToDelete) => productToDelete.id === clientProduct.id,
-        ),
-    );
-
-    return await this.cartRepository.save(user.cart);
-  }
-
-  async getAllProductsOfUserCart(userId: string): Promise<string[]> {
+  async getAllProductsOfUserCart(userId: string): Promise<number[]> {
     const user = await this.userRepository.getUserById(userId);
-
     if (!user) throw new NotFoundException('Usuario no encontrado');
 
-    const cart = await this.cartRepository.getCartById(user.cart.id);
-
-    const products = await Promise.all(
-      cart.products.map(async (product) => {
-        return product.id;
-      }),
-    );
-
+    const cart = await this.cartRepository.getCartByUserId(user.id);
+    const products = (cart.cartItems || []).map((ci) => ci.product.id);
     return products;
   }
 
@@ -180,46 +146,43 @@ export class CartService {
     temporaryUserId: string,
     authenticatedUserId: string,
   ): Promise<void> {
-    // Cuando un usuario inicia sesión, migrar su carrito temporal a la DB
     const temporaryCart =
       await this.cartRedisService.getTemporaryCart(temporaryUserId);
-
-    if (temporaryCart.products.length > 0) {
-      const productIds = temporaryCart.products.map((product) => product.id);
+    if ((temporaryCart.products || []).length > 0) {
+      const productIds = temporaryCart.products.map((p) => p.id as number);
       await this.addProductToUserCart(authenticatedUserId, productIds);
-      // Limpiar el carrito temporal
       await this.cartRedisService.removeTemporaryCart(temporaryUserId);
     }
   }
 
   async removeFromCart(
     userId: string,
-    productId: string,
+    productId: number,
     isAuthenticated: boolean,
   ): Promise<void> {
     if (isAuthenticated) {
-      // Remover de la base de datos
       await this.cartRepository.removeProductFromCart(userId, productId);
-    } else {
-      // Remover de Redis
-      const temporaryCart =
-        await this.cartRedisService.getTemporaryCart(userId);
-      const updatedProducts = temporaryCart.products.filter(
-        (product) => product.id !== productId,
-      );
-      await this.cartRedisService.updateTemporaryCart(userId, updatedProducts);
+      return;
     }
+
+    const temporaryCart = await this.cartRedisService.getTemporaryCart(userId);
+    const updatedProducts = (temporaryCart.products || []).filter(
+      (product) => product.id !== productId,
+    );
+    await this.cartRedisService.updateTemporaryCart(
+      userId,
+      updatedProducts as any,
+    );
   }
 
   async clearCart(userId: string, isAuthenticated: boolean): Promise<void> {
     if (isAuthenticated) {
-      // Limpiar carrito en la base de datos
       await this.cartRepository.clearCart(
         await this.cartRepository.getCartByUserId(userId),
       );
-    } else {
-      // Limpiar carrito en Redis
-      await this.cartRedisService.removeTemporaryCart(userId);
+      return;
     }
+
+    await this.cartRedisService.removeTemporaryCart(userId);
   }
 }

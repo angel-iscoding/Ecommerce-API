@@ -1,8 +1,7 @@
 import { AuthGuard } from '@/auth/auth.guard';
 import { RequestWithUser } from '@/config/request-with-user.interface';
-import { Cart } from '@/database/cart/cart.entity';
-import { cartDto } from '@/database/cart/cartDto.dto';
-import { MigrateCartDto } from '@/database/cart/migrateCartDto.dto';
+import { Cart } from '@/database/entities/cart.entity';
+import { MigrateCartDto } from '@/database/dto/migrateCartDto.dto';
 import { idParamDto } from '@/database/idParamDto.dto';
 import {
   BadRequestException,
@@ -11,12 +10,14 @@ import {
   Delete,
   Get,
   Post,
+  Param,
   Request,
   UseGuards,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { v4 as uuidv4 } from 'uuid';
 import { CartService } from './cart.service';
+import { TemporaryCart } from './cart-redis.service';
 
 @ApiTags('Cart')
 @Controller('cart')
@@ -27,23 +28,27 @@ export class CartController {
   @UseGuards(AuthGuard)
   @ApiBearerAuth()
   async addToCart(
-    @Body() data: cartDto,
+    @Body() data: number[],
     @Request() req: RequestWithUser,
   ): Promise<{ message: string; id: string }> {
     try {
       const isAuthenticated: boolean = req.user ? true : false;
       const userId: string = isAuthenticated ? req.user.id : uuidv4();
 
-      await this.cartService.addProductToCart(
-        userId,
-        data.products,
-        isAuthenticated,
-      );
+      const cart: Cart | TemporaryCart =
+        await this.cartService.addProductToCart(userId, data, isAuthenticated);
 
-      return {
-        message: `Productos: ${data.products}. Agregados al carrito del usuario.`,
-        id: userId,
-      };
+      if (cart instanceof Cart) {
+        return {
+          message: `Productos: ${cart.cartItems.map((p) => p.product.id).join(', ')}. Agregados al carrito del usuario.`,
+          id: userId,
+        };
+      } else {
+        return {
+          message: `Productos: ${cart.products.map((p) => p.id).join(', ')}. Agregados al carrito del usuario.`,
+          id: userId,
+        };
+      }
     } catch (error) {
       throw new BadRequestException(
         'No se pudo agregar el producto al carrito: ' + error.message,
@@ -55,12 +60,12 @@ export class CartController {
   @UseGuards(AuthGuard)
   @ApiBearerAuth()
   async getCart(
-    @Body() user: idParamDto,
+    @Param() params: idParamDto,
     @Request() req: RequestWithUser,
   ): Promise<{ message: string; id: string; cart: Cart }> {
     try {
       const isAuthenticated: boolean = req.user ? true : false;
-      const idUser: string = isAuthenticated ? req.user.id : user.id;
+      const idUser: string = isAuthenticated ? req.user.id : params.id;
 
       const cart: Cart = await this.cartService.getCart(
         idUser,
@@ -139,7 +144,7 @@ export class CartController {
   @UseGuards(AuthGuard)
   @ApiBearerAuth()
   async removeFromCart(
-    @Body() data: idParamDto,
+    @Body() data: number,
     @Request() req: RequestWithUser,
   ): Promise<{ message: string }> {
     try {
@@ -152,7 +157,7 @@ export class CartController {
 
       const userId: string = req.user.id;
 
-      await this.cartService.removeFromCart(userId, data.id, isAuthenticated);
+      await this.cartService.removeFromCart(userId, data, isAuthenticated);
       return { message: 'Producto removido del carrito' };
     } catch (error) {
       throw new BadRequestException(

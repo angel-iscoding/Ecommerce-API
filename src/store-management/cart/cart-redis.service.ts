@@ -1,8 +1,15 @@
-import { Cart } from '@/database/cart/cart.entity';
-import { Product } from '@/database/products/product.entity';
+import { Product } from '@/database/entities/product.entity';
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { Redis } from 'ioredis';
 import { v4 as uuidv4 } from 'uuid';
+
+// Temporary cart shape stored in Redis (not the DB Cart entity)
+export type TemporaryCart = {
+  id: string;
+  price: number;
+  products: Partial<Product>[];
+  user: string | null;
+};
 
 @Injectable()
 export class CartRedisService implements OnModuleInit {
@@ -53,7 +60,7 @@ export class CartRedisService implements OnModuleInit {
 
   async createTemporaryCart(): Promise<string> {
     const cartId = uuidv4();
-    const newCart: Cart = {
+    const newCart: TemporaryCart = {
       id: cartId,
       price: 0,
       products: [],
@@ -69,7 +76,7 @@ export class CartRedisService implements OnModuleInit {
     return cartId;
   }
 
-  async getTemporaryCart(cartId: string): Promise<Cart> {
+  async getTemporaryCart(cartId: string): Promise<TemporaryCart> {
     const cartKey = this.getCartKey(cartId);
     const cart = await this.redis.get(cartKey);
     if (!cart) {
@@ -78,21 +85,24 @@ export class CartRedisService implements OnModuleInit {
         price: 0,
         products: [],
         user: null,
-      };
+      } as TemporaryCart;
     }
-    return JSON.parse(cart) as Cart;
+    return JSON.parse(cart) as TemporaryCart;
   }
 
   async updateTemporaryCart(
     cartId: string,
-    products: Product[],
-  ): Promise<void> {
+    products: Partial<Product>[],
+  ): Promise<TemporaryCart> {
     const cartKey = this.getCartKey(cartId);
     const existingCart = await this.getTemporaryCart(cartId);
-    const cart: Cart = {
+    const cart: TemporaryCart = {
       ...existingCart,
       products: products,
-      price: products.reduce((sum, product) => sum + Number(product.price), 0),
+      price: products.reduce(
+        (sum, product) => sum + Number(product.price ?? 0),
+        0,
+      ),
     };
 
     await this.redis.set(
@@ -101,18 +111,23 @@ export class CartRedisService implements OnModuleInit {
       'EX',
       this.EXPIRATION_TIME,
     );
+
+    return cart;
   }
 
-  async addToTemporaryCart(cartId: string, products: Product[]): Promise<void> {
+  async addToTemporaryCart(
+    cartId: string,
+    products: Partial<Product>[],
+  ): Promise<void> {
     const cartKey = this.getCartKey(cartId);
     const existingCart = await this.getTemporaryCart(cartId);
 
     const updatedProducts = [...existingCart.products, ...products];
-    const updatedCart: Cart = {
+    const updatedCart: TemporaryCart = {
       ...existingCart,
       products: updatedProducts,
       price: updatedProducts.reduce(
-        (sum, product) => sum + Number(product.price),
+        (sum, product) => sum + Number(product.price ?? 0),
         0,
       ),
     };

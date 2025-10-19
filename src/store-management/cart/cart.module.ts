@@ -1,4 +1,6 @@
-import { Cart } from '@/database/cart/cart.entity';
+import { Cart } from '@/database/entities/cart.entity';
+import { CartItem } from '@/database/entities/cart-item.entity';
+import { Product } from '@/database/entities/product.entity';
 import { OrderModule } from '@/store-management/orders/order.module';
 import { ProductsModule } from '@/store-management/products/product.module';
 import { UsersModule } from '@/user-management/users/user.module';
@@ -11,7 +13,7 @@ import { CartService } from './cart.service';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Cart]),
+    TypeOrmModule.forFeature([Cart, CartItem, Product]),
     ProductsModule,
     forwardRef(() => OrderModule),
     forwardRef(() => UsersModule),
