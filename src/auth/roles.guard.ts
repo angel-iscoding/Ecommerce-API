@@ -6,14 +6,14 @@ import {
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { ROLES_KEY } from '../config/role.decorator';
-import { Role } from '../config/role.enum';
+import { RoleNames } from '@/config/role-names.enum';
 
 @Injectable()
 export class RolesGuard implements CanActivate {
   constructor(private reflector: Reflector) {}
 
   canActivate(context: ExecutionContext): boolean {
-    const requiredRoles = this.reflector.getAllAndOverride<Role[]>(ROLES_KEY, [
+    const requiredRoles = this.reflector.getAllAndOverride<RoleNames[]>(ROLES_KEY, [
       context.getHandler(),
       context.getClass(),
     ]);
@@ -21,7 +21,7 @@ export class RolesGuard implements CanActivate {
       return true;
     }
     const { user } = context.switchToHttp().getRequest();
-    if (!requiredRoles.some((role) => user.roles?.includes(role))) {
+    if (!requiredRoles.some((role) => user.role?.includes(role))) {
       throw new ForbiddenException(
         'No tienes permisos para acceder a esta ruta',
       );
