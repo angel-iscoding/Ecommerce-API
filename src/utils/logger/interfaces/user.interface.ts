@@ -1,17 +1,17 @@
-import { ICart } from './cart.interface';
-import { IRole } from './roles.interface';
+import { Cart } from '@/database/entities/cart.entity';
+import { Role } from '@/database/entities/role.entity';
 
 export interface IUser {
-  id: string;
+  id?: string;
   name: string;
   email: string;
-  password?: string;
+  password: string;
   address: string;
-  phone: number;
+  phone: string;
   country: string;
   city: string;
-  role: IRole;
-  created_at: Date;
-  updated_at: Date;
-  cart?: ICart;
+  role: Role;
+  created_at?: Date;
+  updated_at?: Date;
+  cart?: Cart;
 }
