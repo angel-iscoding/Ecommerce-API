@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { CloudService } from './cloud.service';
 import { CloudController } from './cloud.controller';
-import { ProductsModule } from '../store-management/products/product.module';
+import { ProductsModule } from '../store-management/products/products.module';
 
 @Module({
   imports: [ProductsModule],
