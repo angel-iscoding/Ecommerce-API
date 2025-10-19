@@ -2,7 +2,7 @@ import { IUser } from './user.interface';
 import { IProduct } from './product.interface';
 
 export interface ICartHistory {
-  id: number;
+  id: string;
   user: IUser;
   product: IProduct;
   action: string;

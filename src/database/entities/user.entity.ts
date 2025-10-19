@@ -30,8 +30,8 @@ export class User {
   @Column({ type: 'varchar', nullable: false })
   address: string;
 
-  @Column({ type: 'integer', nullable: true })
-  phone: number;
+  @Column({ type: 'varchar', nullable: false })
+  phone: string;
 
   @Column({ type: 'varchar', nullable: false })
   country: string;

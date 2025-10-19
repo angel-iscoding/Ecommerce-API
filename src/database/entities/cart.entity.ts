@@ -13,8 +13,8 @@ import { CartItem } from './cart-item.entity';
 
 @Entity('cart')
 export class Cart {
-  @PrimaryGeneratedColumn()
-  id: number;
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
   @OneToOne(() => User, (user) => user.cart, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'user_id' })

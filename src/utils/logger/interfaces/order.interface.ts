@@ -5,7 +5,7 @@ import { IPaymentStatus } from './payment-status.interface';
 import { IUser } from './user.interface';
 
 export interface IOrder {
-  id: number;
+  id: string;
   user: IUser;
   order_number: string;
   order_date: Date;

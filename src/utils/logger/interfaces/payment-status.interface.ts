@@ -1,4 +1,4 @@
 export interface IPaymentStatus {
-  id: number;
+  id: string;
   status: string;
 }

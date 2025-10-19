@@ -17,8 +17,8 @@ import { ProductPriceHistory } from './product-price-history.entity';
 
 @Entity('product')
 export class Product {
-  @PrimaryGeneratedColumn()
-  id: number;
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
   @Column({ type: 'varchar', length: 50, nullable: false })
   name: string;

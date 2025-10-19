@@ -12,8 +12,8 @@ import { Product } from './product.entity';
 
 @Entity('order_items')
 export class OrderItem {
-  @PrimaryGeneratedColumn()
-  id: number;
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
   @ManyToOne(() => Order, (order) => order.orderItems, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'order_id' })
@@ -24,7 +24,7 @@ export class OrderItem {
   product: Product;
 
   @Column({ type: 'int' })
-  cart_item_id: number;
+  cart_item_id: string;
 
   @Column({ type: 'varchar', length: 100, nullable: false })
   product_name: string;

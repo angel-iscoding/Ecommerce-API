@@ -1,4 +1,4 @@
 export interface IPaymentMethod {
-  id: number;
+  id: string;
   name: string;
 }

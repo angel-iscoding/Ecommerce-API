@@ -12,8 +12,8 @@ import { User } from './user.entity';
 
 @Entity('product_price_history')
 export class ProductPriceHistory {
-  @PrimaryGeneratedColumn()
-  id: number;
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
   @ManyToOne(() => Product, (product) => product.priceHistory)
   @JoinColumn({ name: 'product_id' })

@@ -1,7 +1,7 @@
 export class CartItemDto {
-  id: number;
-  cart_id: number;
-  product_id: number;
+  id: string;
+  cart_id: string;
+  product_id: string;
   quantity: number;
   notes: string;
   unit_price: number;

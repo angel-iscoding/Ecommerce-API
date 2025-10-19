@@ -1,6 +1,6 @@
 export class CartDto {
-  id: number;
-  user_id: number;
+  id: string;
+  user_id: string;
   created_at: Date;
   updated_at: Date;
   cartItems?: number[];

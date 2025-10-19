@@ -1,8 +1,8 @@
 export class OrderItemDto {
-  id: number;
-  order_id: number;
-  product_id: number;
-  cart_item_id: number;
+  id: string;
+  order_id: string;
+  product_id: string;
+  cart_item_id: string;
   product_name: string;
   product_description: string;
   quantity: number;

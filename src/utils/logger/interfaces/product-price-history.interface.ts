@@ -2,7 +2,7 @@ import { IProduct } from './product.interface';
 import { IUser } from './user.interface';
 
 export interface IProductPriceHistory {
-  id: number;
+  id: string;
   product: IProduct;
   old_price: number;
   new_price: number;

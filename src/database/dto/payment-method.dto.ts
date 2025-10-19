@@ -1,4 +1,4 @@
 export class PaymentMethodDto {
-  id: number;
+  id: string;
   name: string;
 }

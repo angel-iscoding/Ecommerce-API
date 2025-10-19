@@ -1,5 +1,5 @@
 export class OrderDto {
-  id: number;
+  id: string;
   user_id: string;
   order_number: string;
   order_date: Date;

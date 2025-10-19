@@ -5,7 +5,7 @@ import { IOrderItem } from './order-item.interface';
 import { IProductPriceHistory } from './product-price-history.interface';
 
 export interface IProduct {
-  id: number;
+  id: string;
   name: string;
   description: string;
   price: number;

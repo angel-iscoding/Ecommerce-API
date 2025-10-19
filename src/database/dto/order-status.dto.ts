@@ -1,4 +1,4 @@
 export class OrderStatusDto {
-  id: number;
+  id: string;
   status: string;
 }

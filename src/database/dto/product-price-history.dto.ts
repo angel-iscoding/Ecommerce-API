@@ -1,6 +1,6 @@
 export class ProductPriceHistoryDto {
-  id: number;
-  product_id: number;
+  id: string;
+  product_id: string;
   old_price: number;
   new_price: number;
   changed_by: string;

@@ -1,7 +1,7 @@
 export class CartHistoryDto {
-  id: number;
-  user_id: number;
-  product_id: number;
+  id: string;
+  user_id: string;
+  product_id: string;
   action: string;
   quantity: number;
   old_quantity: number;
