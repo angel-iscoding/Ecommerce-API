@@ -5,27 +5,27 @@ import { Role } from '@/database/entities/role.entity';
 import { RoleNames } from '@/config/role-names.enum';
 
 @Injectable()
-export class RoleRepository {
+export class RolesRepository {
   constructor(
     @InjectRepository(Role)
     private rolesRepository: Repository<Role>,
   ) {}
 
-  async getAllRoles(): Promise<Role[]> {
+  async findAll(): Promise<Role[]> {
     return await this.rolesRepository.find();
   }
 
-  async getRoleById(id: number): Promise<Role | null> {
+  async findById(id: string): Promise<Role | null> {
     return await this.rolesRepository.findOne({ where: { id } });
   }
   
-  getRoleByName(roleName: RoleNames): Promise<Role> {
-    return this.rolesRepository.findOne({ where: { name: roleName } });
+  async findByName(roleName: RoleNames): Promise<Role> {
+    return await this.rolesRepository.findOne({ where: { name: roleName } });
   }
 
-  createRole(roleName: RoleNames): Promise<Role> {
+  async create(roleName: RoleNames): Promise<Role> {
     const role = this.rolesRepository.create({ name: roleName });
-    return this.rolesRepository.save(role);
+    return await this.rolesRepository.save(role);
   }
 
 }

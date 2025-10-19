@@ -6,20 +6,20 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
 @Injectable()
-export class CartRepository {
+export class CartsRepository {
   constructor(
     @InjectRepository(Cart)
-    private cartRepository: Repository<Cart>,
+    private CartsRepository: Repository<Cart>,
   ) {}
 
   async getAllCart(): Promise<Cart[]> {
-    return await this.cartRepository.find({
+    return await this.CartsRepository.find({
       relations: ['cartItems', 'user'],
     });
   }
 
-  async getCartById(id: number): Promise<Cart> {
-    const cart: Cart = await this.cartRepository.findOne({
+  async getCartById(id: string): Promise<Cart> {
+    const cart: Cart = await this.CartsRepository.findOne({
       where: { id },
       relations: ['cartItems', 'cartItems.product', 'user'],
     });
@@ -32,7 +32,7 @@ export class CartRepository {
   }
 
   async getCartByUserId(userId: string): Promise<Cart> {
-    const cart = await this.cartRepository.findOne({
+    const cart = await this.CartsRepository.findOne({
       where: { user: { id: userId } },
       relations: ['cartItems', 'cartItems.product', 'user'],
     });
@@ -45,23 +45,23 @@ export class CartRepository {
   }
 
   async save(cart: Cart): Promise<Cart> {
-    return await this.cartRepository.save(cart);
+    return await this.CartsRepository.save(cart);
   }
 
   async create(user: User): Promise<Cart> {
-    const cart = this.cartRepository.create({ user });
-    return await this.cartRepository.save(cart);
+    const cart = this.CartsRepository.create({ user });
+    return await this.CartsRepository.save(cart);
   }
 
   async removeProductFromCart(
     userId: string,
-    productId: number,
+    productid: string,
   ): Promise<void> {
     const cart = await this.getCartByUserId(userId);
 
     // Remove cartItems referencing productId
     cart.cartItems = (cart.cartItems || []).filter(
-      (ci) => ci.product.id !== productId,
+      (ci) => ci.product.id !== productid,
     );
 
     await this.save(cart);
@@ -83,8 +83,8 @@ export class CartRepository {
     return await this.save(cart);
   }
 
-  async updateCartPrice(cartId: number): Promise<number> {
-    const cart = await this.getCartById(cartId);
+  async updateCartPrice(cartid: string): Promise<number> {
+    const cart = await this.getCartById(cartid);
 
     // calculate total from cartItems (unit_price * quantity)
     const total = (cart.cartItems || []).reduce(

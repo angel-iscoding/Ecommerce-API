@@ -3,9 +3,9 @@ import { Category } from '@/database/entities/category.entity';
 import { Module } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { CategoriesController } from './category.controller';
-import { CategoriesRepository } from './category.repository';
-import { CategoriesService } from './category.service';
+import { CategoriesController } from './categories.controller';
+import { CategoriesRepository } from './categories.repository';
+import { CategoriesService } from './categories.service';
 
 @Module({
   imports: [

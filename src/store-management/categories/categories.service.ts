@@ -1,7 +1,7 @@
 import { Category } from '@/database/entities/category.entity';
 import { CategoryDto } from '@/database/dto/category.dto';
 import { Injectable } from '@nestjs/common';
-import { CategoriesRepository } from './category.repository';
+import { CategoriesRepository } from './categories.repository';
 
 @Injectable()
 export class CategoriesService {
@@ -15,7 +15,7 @@ export class CategoriesService {
     return await this.categoriesRepository.createCategory(category);
   }
 
-  async getById(id: number): Promise<Category | undefined> {
+  async getById(id: string): Promise<Category | undefined> {
     return await this.categoriesRepository.findById(id);
   }
 
@@ -29,7 +29,7 @@ export class CategoriesService {
     return Promise.resolve(false);
   }
 
-  async deleteCategory(id: number): Promise<void> {
+  async deleteCategory(id: string): Promise<void> {
     await this.categoriesRepository.deleteCategory(id);
   }
 }

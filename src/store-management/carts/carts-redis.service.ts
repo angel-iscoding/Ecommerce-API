@@ -12,9 +12,9 @@ export type TemporaryCart = {
 };
 
 @Injectable()
-export class CartRedisService implements OnModuleInit {
+export class CartsRedisService implements OnModuleInit {
   private readonly redis: Redis;
-  private readonly logger = new Logger(CartRedisService.name);
+  private readonly logger = new Logger(CartsRedisService.name);
   private readonly EXPIRATION_TIME = 60 * 60 * 24; // 24 horas en segundos
 
   constructor() {

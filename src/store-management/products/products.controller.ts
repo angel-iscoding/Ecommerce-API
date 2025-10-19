@@ -19,16 +19,8 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiProperty, ApiTags } from '@nestjs/swagger';
-// id is numeric now
-import { ProductsService } from './product.service';
-
-class ProductIdParam {
-  @ApiProperty({
-    description: 'Numeric id del producto',
-    example: 1,
-  })
-  id: number;
-}
+import { ProductsService } from './products.service';
+import { ParamIdRequestDto } from '@/database/dto/request/param-id-request.dto';
 
 @ApiTags('Products')
 @ApiBearerAuth()
@@ -48,7 +40,7 @@ export class ProductsController {
   }
 
   @Get(':id')
-  async getProductById(@Param('id') id: number): Promise<Product> {
+  async getProductById(@Param('id') id: string): Promise<Product> {
     try {
       const product: Product = await this.productsService.getProductById(id);
       return product;
@@ -83,7 +75,7 @@ export class ProductsController {
   @UseGuards(AuthGuard, RolesGuard)
   @Roles(RoleNames.Admin, RoleNames.Trader)
   async updateProduct(
-    @Param() params: ProductIdParam,
+    @Param() params: ParamIdRequestDto,
     @Body() product: ProductDto,
   ): Promise<{ message: string }> {
     try {
@@ -105,7 +97,7 @@ export class ProductsController {
   @UseGuards(AuthGuard, RolesGuard)
   @Roles(RoleNames.Admin, RoleNames.Trader)
   async deleteProduct(
-    @Param() params: ProductIdParam,
+    @Param() params: ParamIdRequestDto,
   ): Promise<{ message: string }> {
     try {
       await this.productsService.deleteProduct(params.id);

@@ -1,19 +1,19 @@
 import { OrderDto } from '@/database/dto/order.dto';
 import { Order } from '@/database/entities/order.entity';
 import { User } from '@/database/entities/user.entity';
-import { UsersRepository } from '@/user-management/users/user.repository';
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { OrderRepository } from './order.repository';
+import { OrdersRepository } from './orders.repository';
+import { UsersService } from '@/users-management/users/users.service';
 
 @Injectable()
-export class OrderService {
+export class OrdersService {
   constructor(
-    private readonly ordersRepository: OrderRepository,
-    private readonly usersRepository: UsersRepository,
+    private readonly ordersRepository: OrdersRepository,
+    private readonly usersService: UsersService,  
   ) {}
 
   async createOrder(order: OrderDto): Promise<Order> {
-    const user = await this.usersRepository.searchCompleteUserById(order.user_id);
+    const user = await this.usersService.findCompleteById(order.user_id);
 
     if (!user) throw new NotFoundException('No existe el usuario');
 
@@ -33,13 +33,13 @@ export class OrderService {
     return await this.ordersRepository.getAllOrders();
   }
 
-  async getById(id: number): Promise<Order | null> {
+  async getById(id: string): Promise<Order | null> {
     return await this.ordersRepository.getById(id);
   }
 
   async getOrdersOfUser(id: string): Promise<Order[]> {
     const user: Omit<User, 'password'> =
-      await this.usersRepository.getUserById(id);
+      await this.usersService.findById(id);
     if (!user) throw new NotFoundException('Usuario no encontrado');
 
     return await this.ordersRepository.getAllOrders();

@@ -27,11 +27,11 @@ export class CategoriesRepository {
     return await this.categoriesRepository.findOne({ where: { name: name } });
   }
 
-  async findById(id: number): Promise<Category | undefined> {
+  async findById(id: string): Promise<Category | undefined> {
     return await this.categoriesRepository.findOne({ where: { id: id } });
   }
 
-  async deleteCategory(id: number): Promise<void> {
+  async deleteCategory(id: string): Promise<void> {
     const categoryToDelete = await this.findById(id);
     if (!categoryToDelete) return;
 

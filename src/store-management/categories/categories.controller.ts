@@ -14,7 +14,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
-import { CategoriesService } from './category.service';
+import { CategoriesService } from './categories.service';
 import { CategoryDto } from '@/database/dto/category.dto';
 
 @ApiTags('Categories')
@@ -35,7 +35,7 @@ export class CategoriesController {
   }
 
   @Get(':id')
-  async getCategoryById(@Param('id') id: number): Promise<Category> {
+  async getCategoryById(@Param('id') id: string): Promise<Category> {
     try {
       const category: Category = await this.categoriesService.getById(id);
       return category;
@@ -72,7 +72,7 @@ export class CategoriesController {
   @UseGuards(AuthGuard, RolesGuard)
   @ApiBearerAuth()
   @Roles(RoleNames.Admin)
-  async deleteCategory(@Param('id') id: number): Promise<{ message: string }> {
+  async deleteCategory(@Param('id') id: string): Promise<{ message: string }> {
     try {
       if (!(await this.categoriesService.getById(id)))
         throw new InternalServerErrorException('Esta categoria no existe');

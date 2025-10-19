@@ -5,7 +5,7 @@ import {
   InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
-import { ProductsRepository } from './product.repository';
+import { ProductsRepository } from './products.repository';
 
 @Injectable()
 export class ProductsService {
@@ -15,7 +15,7 @@ export class ProductsService {
     return await this.productsRepository.getAllProducts();
   }
 
-  async getProductById(id: number): Promise<Product> {
+  async getProductById(id: string): Promise<Product> {
     const product: Product = await this.productsRepository.getProductById(id);
 
     if (!product) {
@@ -40,7 +40,7 @@ export class ProductsService {
   }
 
   async updateProduct(
-    id: number,
+    id: string,
     updateProduct: ProductDto,
   ): Promise<Product | undefined> {
     const product: Product = await this.productsRepository.getProductById(id);
@@ -50,7 +50,7 @@ export class ProductsService {
     return await this.productsRepository.updateProduct(product, updateProduct);
   }
 
-  async updateProductImage(id: number, imageUrl: string): Promise<Product> {
+  async updateProductImage(id: string, imageUrl: string): Promise<Product> {
     const product: Product = await this.productsRepository.getProductById(id);
     if (!product) {
       throw new NotFoundException('Producto no encontrado');
@@ -60,7 +60,7 @@ export class ProductsService {
     });
   }
 
-  async deleteProduct(id: number): Promise<void> {
+  async deleteProduct(id: string): Promise<void> {
     if (!(await this.productsRepository.getProductById(id))) {
       throw new NotFoundException('Producto no encontrado');
     }

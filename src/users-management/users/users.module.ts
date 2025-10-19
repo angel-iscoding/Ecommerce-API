@@ -1,22 +1,22 @@
 import { Module, forwardRef } from '@nestjs/common';
 import { AuthModule } from '@/auth/auth.module';
-import { CartModule } from '@/store-management/cart/cart.module';
-import { OrderModule } from '@/store-management/orders/order.module';
-import { ProductsModule } from '@/store-management/products/product.module';
+import { CartsModule } from '@/store-management/carts/carts.module';
+import { OrdersModule } from '@/store-management/orders/orders.module';
+import { ProductsModule } from '@/store-management/products/products.module';
 import { JwtModule } from '@nestjs/jwt';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { CartRepository } from '@/store-management/cart/cart.repository';
-import { OrderRepository } from '@/store-management/orders/order.repository';
+import { CartsRepository } from '@/store-management/carts/carts.repository';
+import { OrdersRepository } from '@/store-management/orders/orders.repository';
 import { Cart } from '@/database/entities/cart.entity';
 import { Order } from '@/database/entities/order.entity';
 import { User } from '@/database/entities/user.entity';
 import { AuthGuard } from '@/auth/auth.guard';
-import { UsersService } from './user.service';
-import { UsersController } from './user.controller';
-import { UsersRepository } from './user.repository';
+import { UsersService } from './users.service';
+import { UsersController } from './users.controller';
+import { UsersRepository } from './users.repository';
 import { Role } from '@/database/entities/role.entity';
-import { RoleService } from '../roles/role.service';
-import { RoleModule } from '../roles/role.module';
+import { RolesService } from '../roles/roles.service';
+import { RolesModule } from '../roles/roles.module';
 
 @Module({
   imports: [
@@ -27,16 +27,16 @@ import { RoleModule } from '../roles/role.module';
     }),
     forwardRef(() => AuthModule),
     forwardRef(() => ProductsModule),
-    forwardRef(() => OrderModule),
-    forwardRef(() => CartModule),
-    forwardRef(() => RoleModule),
+    forwardRef(() => OrdersModule),
+    forwardRef(() => CartsModule),
+    forwardRef(() => RolesModule),
   ],
   providers: [
-    RoleService,
+    RolesService,
     UsersService,
     UsersRepository,
-    OrderRepository,
-    CartRepository,
+    OrdersRepository,
+    CartsRepository,
     AuthGuard,
   ],
   controllers: [UsersController],
@@ -44,8 +44,8 @@ import { RoleModule } from '../roles/role.module';
     UsersRepository,
     UsersService,
     JwtModule,
-    OrderRepository,
-    CartRepository,
+    OrdersRepository,
+    CartsRepository,
   ],
 })
 export class UsersModule {}

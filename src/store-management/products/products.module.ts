@@ -2,14 +2,14 @@ import { AuthGuard } from '@/auth/auth.guard';
 import { Product } from '@/database/entities/product.entity';
 import { Category } from '@/database/entities/category.entity';
 import { CartItem } from '@/database/entities/cart-item.entity';
-import { CategoriesModule } from '@/store-management/categories/category.module';
-import { UsersModule } from '@/user-management/users/user.module';
+import { CategoriesModule } from '@/store-management/categories/categories.module';
+import { UsersModule } from '@/users-management/users/users.module';
 import { forwardRef, Module } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { ProductsController } from './product.controller';
-import { ProductsRepository } from './product.repository';
-import { ProductsService } from './product.service';
+import { ProductsController } from './products.controller';
+import { ProductsRepository } from './products.repository';
+import { ProductsService } from './products.service';
 
 @Module({
   imports: [

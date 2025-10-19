@@ -15,7 +15,7 @@ export class ProductsRepository {
     return await this.productsRepository.find();
   }
 
-  async getProductById(id: number): Promise<Product | undefined> {
+  async getProductById(id: string): Promise<Product | undefined> {
     return await this.productsRepository.findOne({ where: { id: id } });
   }
 
@@ -45,7 +45,7 @@ export class ProductsRepository {
     return await this.productsRepository.findOne({ where: { id: product.id } });
   }
 
-  async deleteProduct(id: number): Promise<void> {
+  async deleteProduct(id: string): Promise<void> {
     await this.productsRepository.delete({ id: id });
   }
 

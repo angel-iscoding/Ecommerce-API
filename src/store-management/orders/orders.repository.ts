@@ -5,7 +5,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
 @Injectable()
-export class OrderRepository {
+export class OrdersRepository {
   constructor(
     @InjectRepository(Order)
     private ordersRepository: Repository<Order>,
@@ -15,7 +15,7 @@ export class OrderRepository {
     return await this.ordersRepository.find({ relations: ['user'] });
   }
 
-  async getById(id: number): Promise<Order | null> {
+  async getById(id: string): Promise<Order | null> {
     return await this.ordersRepository.findOne({
       where: { id: id },
       relations: ['user'],

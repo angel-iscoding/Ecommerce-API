@@ -2,56 +2,56 @@ import { Cart } from '@/database/entities/cart.entity';
 import { Order } from '@/database/entities/order.entity';
 import { Product } from '@/database/entities/product.entity';
 import { User } from '@/database/entities/user.entity';
-import { OrderRepository } from '@/store-management/orders/order.repository';
-import { ProductsRepository } from '@/store-management/products/product.repository';
+import { OrdersRepository } from '@/store-management/orders/orders.repository';
+import { ProductsRepository } from '@/store-management/products/products.repository';
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { UsersRepository } from 'src/user-management/users/user.repository';
-import { CartRedisService } from './cart-redis.service';
-import { CartRepository } from './cart.repository';
-import { TemporaryCart } from './cart-redis.service';
+import { UsersService } from '@/users-management/users/users.service';
+import { CartsRedisService } from './carts-redis.service';
+import { CartsRepository } from './carts.repository';
+import { TemporaryCart } from './carts-redis.service';
 
 @Injectable()
-export class CartService {
+export class CartsService {
   constructor(
-    private cartRepository: CartRepository,
-    private userRepository: UsersRepository,
+    private CartsRepository: CartsRepository,
+    private usersService: UsersService,
     private productRepostory: ProductsRepository,
-    private orderRepository: OrderRepository,
-    private cartRedisService: CartRedisService,
+    private OrdersRepository: OrdersRepository,
+    private CartsRedisService: CartsRedisService,
   ) {}
 
   async getAllCart(): Promise<Cart[]> {
-    return await this.cartRepository.getAllCart();
+    return await this.CartsRepository.getAllCart();
   }
 
   async thisUserExist(userId: string): Promise<boolean> {
     const user: Omit<User, 'password'> | undefined =
-      await this.userRepository.getUserById(userId);
+      await this.usersService.findById(userId);
     return !!user;
   }
 
   async getCart(cartId: string, isAuthenticated: boolean): Promise<Cart | any> {
     if (isAuthenticated)
-      return await this.cartRepository.getCartByUserId(cartId);
+      return await this.CartsRepository.getCartByUserId(cartId);
 
-    const cartTemporaly = await this.cartRedisService.getTemporaryCart(cartId);
+    const cartTemporaly = await this.CartsRedisService.getTemporaryCart(cartId);
     if (!cartTemporaly) throw new NotFoundException('Carrito no encontrado');
     return cartTemporaly;
   }
 
   async getCartByUser(id: string): Promise<Cart | undefined> {
-    const user = await this.userRepository.getUserById(id);
+    const user = await this.usersService.findById(id);
     if (!user) throw new NotFoundException('Usuario no encontrado');
     return user.cart;
   }
 
   async addProductToCart(
     userId: string,
-    productId: number[],
+    productid: string[],
     isAuthenticated: boolean,
   ): Promise<Cart | TemporaryCart> {
     const products = await Promise.all(
-      productId.map(async (id) => {
+      productid.map(async (id) => {
         const product = await this.productRepostory.getProductById(id);
         if (!product)
           throw new NotFoundException(`Producto ${id} no encontrado`);
@@ -60,40 +60,40 @@ export class CartService {
     );
 
     if (isAuthenticated) {
-      await this.addProductToUserCart(userId, productId);
+      await this.addProductToUserCart(userId, productid);
       return;
     }
 
     const temporaryCart: TemporaryCart =
-      await this.cartRedisService.getTemporaryCart(userId);
+      await this.CartsRedisService.getTemporaryCart(userId);
     const updatedProducts = [...temporaryCart.products, ...products];
 
-    return await this.cartRedisService.updateTemporaryCart(
+    return await this.CartsRedisService.updateTemporaryCart(
       userId,
       updatedProducts as any,
     );
   }
 
-  async addProductToUserCart(id: string, productId: number[]): Promise<Cart> {
-    const cart = await this.cartRepository.getCartByUserId(id);
+  async addProductToUserCart(id: string, productid: string[]): Promise<Cart> {
+    const cart = await this.CartsRepository.getCartByUserId(id);
     if (!cart) throw new NotFoundException('Error al encontrar el usuario');
 
     const validProducts: Product[] = [];
-    for (const currentProductId of productId) {
+    for (const currentProductId of productid) {
       const product =
         await this.productRepostory.getProductById(currentProductId);
       if (product) validProducts.push(product);
     }
 
-    const updated = await this.cartRepository.addProducts(cart, validProducts);
+    const updated = await this.CartsRepository.addProducts(cart, validProducts);
     return updated;
   }
 
   async buyCart(userId: string): Promise<Order> {
-    const user: User = await this.userRepository.searchCompleteUserById(userId);
+    const user: User = await this.usersService.findCompleteById(userId);
     if (!user) throw new NotFoundException('Usuario no encontrado');
 
-    const cart: Cart = await this.cartRepository.getCartByUserId(user.id);
+    const cart: Cart = await this.CartsRepository.getCartByUserId(user.id);
     if (!cart) throw new NotFoundException('Carrito no encontrado');
 
     const total = (cart.cartItems || []).reduce(
@@ -108,36 +108,36 @@ export class CartService {
       }
     }
 
-    const order: Order = await this.orderRepository.create(user);
+    const order: Order = await this.OrdersRepository.create(user);
     order.order_number = `ORD-${Date.now()}`;
     order.order_date = new Date();
     order.total_amount = total;
     order.shipping_address = user.address;
 
-    await this.orderRepository.save(order);
-    await this.cartRepository.clearCart(cart);
+    await this.OrdersRepository.save(order);
+    await this.CartsRepository.clearCart(cart);
     return order;
   }
 
-  async deleteProduct(id: string, productId: number[]): Promise<Cart> {
-    const user = await this.userRepository.getUserById(id);
+  async deleteProduct(id: string, productid: string[]): Promise<Cart> {
+    const user = await this.usersService.findById(id);
     if (!user) throw new NotFoundException('Error al encontrar el usuario');
 
-    const cart = await this.cartRepository.getCartByUserId(user.id);
+    const cart = await this.CartsRepository.getCartByUserId(user.id);
     if (!cart) throw new NotFoundException('Carrito no encontrado');
 
     cart.cartItems = (cart.cartItems || []).filter(
-      (ci) => !productId.includes(ci.product.id),
+      (ci) => !productid.includes(ci.product.id),
     );
 
-    return await this.cartRepository.save(cart);
+    return await this.CartsRepository.save(cart);
   }
 
-  async getAllProductsOfUserCart(userId: string): Promise<number[]> {
-    const user = await this.userRepository.getUserById(userId);
+  async getAllProductsOfUserCart(userId: string): Promise<string[]> {
+    const user = await this.usersService.findById(userId);
     if (!user) throw new NotFoundException('Usuario no encontrado');
 
-    const cart = await this.cartRepository.getCartByUserId(user.id);
+    const cart = await this.CartsRepository.getCartByUserId(user.id);
     const products = (cart.cartItems || []).map((ci) => ci.product.id);
     return products;
   }
@@ -147,29 +147,29 @@ export class CartService {
     authenticatedUserId: string,
   ): Promise<void> {
     const temporaryCart =
-      await this.cartRedisService.getTemporaryCart(temporaryUserId);
+      await this.CartsRedisService.getTemporaryCart(temporaryUserId);
     if ((temporaryCart.products || []).length > 0) {
-      const productIds = temporaryCart.products.map((p) => p.id as number);
+      const productIds = temporaryCart.products.map((p) => p.id as string);
       await this.addProductToUserCart(authenticatedUserId, productIds);
-      await this.cartRedisService.removeTemporaryCart(temporaryUserId);
+      await this.CartsRedisService.removeTemporaryCart(temporaryUserId);
     }
   }
 
   async removeFromCart(
     userId: string,
-    productId: number,
+    productid: string,
     isAuthenticated: boolean,
   ): Promise<void> {
     if (isAuthenticated) {
-      await this.cartRepository.removeProductFromCart(userId, productId);
+      await this.CartsRepository.removeProductFromCart(userId, productid);
       return;
     }
 
-    const temporaryCart = await this.cartRedisService.getTemporaryCart(userId);
+    const temporaryCart = await this.CartsRedisService.getTemporaryCart(userId);
     const updatedProducts = (temporaryCart.products || []).filter(
-      (product) => product.id !== productId,
+      (product) => product.id !== productid,
     );
-    await this.cartRedisService.updateTemporaryCart(
+    await this.CartsRedisService.updateTemporaryCart(
       userId,
       updatedProducts as any,
     );
@@ -177,12 +177,12 @@ export class CartService {
 
   async clearCart(userId: string, isAuthenticated: boolean): Promise<void> {
     if (isAuthenticated) {
-      await this.cartRepository.clearCart(
-        await this.cartRepository.getCartByUserId(userId),
+      await this.CartsRepository.clearCart(
+        await this.CartsRepository.getCartByUserId(userId),
       );
       return;
     }
 
-    await this.cartRedisService.removeTemporaryCart(userId);
+    await this.CartsRedisService.removeTemporaryCart(userId);
   }
 }
