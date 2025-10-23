@@ -2,18 +2,15 @@ import { Module, OnApplicationBootstrap } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AuthModule } from './auth/auth.module';
-import { CloudModule } from './cloud/cloud.module';
+// CloudModule removed
 import typeOrmConfig from './config/typeorm';
-import { PaymentsModule } from './payments/payments.module';
+// PaymentsModule removed
 import { CartsModule } from './store-management/carts/carts.module';
 import { CategoriesModule } from './store-management/categories/categories.module';
 import { OrdersModule } from './store-management/orders/orders.module';
 import { ProductsModule } from './store-management/products/products.module';
 import { UsersModule } from './users-management/users/users.module';
-import { LoggerModule } from './utils/logger/logger.module';
 import { RolesSeeder } from './users-management/roles/roles.seeder';
-import { CustomLogger } from './utils/logger/custom-logger.module';
-import { RolesService } from './users-management/roles/roles.service';
 import { RolesModule } from './users-management/roles/roles.module';
 
 @Module({
@@ -28,7 +25,7 @@ import { RolesModule } from './users-management/roles/roles.module';
       useFactory: (ConfigService: ConfigService) =>
         ConfigService.get('typeorm'),
     }),
-    LoggerModule,
+  // LoggerModule removed
     CartsModule,
     RolesModule,
     UsersModule,
@@ -36,26 +33,21 @@ import { RolesModule } from './users-management/roles/roles.module';
     ProductsModule,
     CategoriesModule,
     OrdersModule,
-    CloudModule,
-    PaymentsModule,
+    // CloudModule and PaymentsModule removed
   ],
   controllers: [],
-  providers: [RolesSeeder, RolesService, CustomLogger],
+  providers: [],
 })
 export class AppModule implements OnApplicationBootstrap {
   [x: string]: any;
-  constructor(
-    private readonly RolesSeeder: RolesSeeder,
-    private readonly logger: CustomLogger,
-  ) {}
+  constructor(private readonly RolesSeeder: RolesSeeder) {}
 
   async onApplicationBootstrap() {
     try {
       await this.RolesSeeder.seed();
       /*  await this.categoriesService.preloadCategories(); */
-      this.logger.log('Precarga de datos completada');
     } catch (error) {
-      this.logger.error('Error durante precarga de datos', error);
+
     }
   }
 }
