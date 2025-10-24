@@ -9,6 +9,7 @@ import { AuthGuard } from '@/auth/auth.guard';
 import { UsersService } from './users.service';
 import { UsersController } from './users.controller';
 import { UsersRepository } from './users.repository';
+import { UsersSeeder } from './users.seeder';
 import { Role } from '@/database/entities/role.entity';
 import { RolesModule } from '../roles/roles.module';
 
@@ -26,11 +27,13 @@ import { RolesModule } from '../roles/roles.module';
     UsersService,
     UsersRepository,
     AuthGuard,
+    UsersSeeder,
   ],
   controllers: [UsersController],
   exports: [
     UsersRepository,
     UsersService,
+    UsersSeeder,
     JwtModule,
   ],
 })

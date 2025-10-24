@@ -5,6 +5,7 @@ import { AuthModule } from './auth/auth.module';
 import typeOrmConfig from './config/typeorm';
 import { UsersModule } from './users-management/users/users.module';
 import { RolesSeeder } from './users-management/roles/roles.seeder';
+import { UsersSeeder } from './users-management/users/users.seeder';
 import { RolesModule } from './users-management/roles/roles.module';
 
 @Module({
@@ -28,13 +29,18 @@ import { RolesModule } from './users-management/roles/roles.module';
 })
 export class AppModule implements OnApplicationBootstrap {
   [x: string]: any;
-  constructor(private readonly RolesSeeder: RolesSeeder) {}
+  constructor(
+    private readonly RolesSeeder: RolesSeeder,
+    private readonly UsersSeeder: UsersSeeder,
+  ) {}
 
   async onApplicationBootstrap() {
     try {
       await this.RolesSeeder.seed();
+      // After roles are seeded, create admin users
+      await this.UsersSeeder.seed();
     } catch (error) {
-
+      // swallow errors during seeding so the app can still start
     }
   }
 }
