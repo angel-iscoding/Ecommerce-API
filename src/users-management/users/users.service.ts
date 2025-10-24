@@ -4,7 +4,6 @@ import {
   ConflictException,
   Injectable,
   NotFoundException,
-  UnauthorizedException,
 } from '@nestjs/common';
 import * as bcrypt from 'bcryptjs';
 import { UsersRepository } from './users.repository';
@@ -24,7 +23,7 @@ export class UsersService {
   async findAll(): Promise<Omit<User, 'password'>[]> {
     return await this.usersRepository.findAll();
   }
-
+  
   async findById(id: string): Promise<Omit<User, 'password'> | null> {
     const user = await this.usersRepository.findById(id);
     if (!user) throw new NotFoundException('User not found');
@@ -36,38 +35,38 @@ export class UsersService {
     if (!user) throw new NotFoundException('User not found');
     return user
   }
-
+  
   async findCompleteById(id: string): Promise<User | null> {
     const user = await this.usersRepository.findById(id);
     if (!user) throw new NotFoundException('User not found');
     return user
   }
-
+  
   async findCompleteByEmail(email: string): Promise<User | null> {
     const user = await this.usersRepository.findByEmail(email);
     if (!user) throw new NotFoundException('User not found');
     return user
   }
-
+  
   async thisUserExist(email: string): Promise<boolean> {
     const user = await this.usersRepository.findByEmail(email);
     return !!user;
   }
-
+  
   async validateCredentials(password: string, confirmPassword: string): Promise<boolean> {
     const isMatch = await bcrypt.compare(password, confirmPassword);
-
+    
     if (isMatch) return true;
     return false;
   }
-
-   async create(CreateUserRequestDto: CreateUserRequestDto): Promise<UserBaseResponseDto> {
+  
+  async create(CreateUserRequestDto: CreateUserRequestDto): Promise<UserBaseResponseDto> {
     const existingUser = await this.thisUserExist(CreateUserRequestDto.email);
     
     if (existingUser) {
       throw new ConflictException('The user already exists');
     }
-
+    
     if (CreateUserRequestDto.password !== CreateUserRequestDto.confirmPassword) {
       throw new BadRequestException('Passwords do not match');
     }
@@ -79,7 +78,7 @@ export class UsersService {
     if (!role) {
       throw new NotFoundException('Role not found');
     }
-
+    
     const userData: IUser = {
       name: CreateUserRequestDto.name,
       email: CreateUserRequestDto.email,
@@ -90,7 +89,7 @@ export class UsersService {
       city: CreateUserRequestDto.city,
       role: role
     };
-
+    
     const user = await this.usersRepository.create(userData);
     return this.toUserResponse(user);
   }
@@ -100,7 +99,7 @@ export class UsersService {
     updatedUser: UpdateUserRequestDto,
   ): Promise<Omit<User, 'password'> | null> {
     const user: User = await this.findCompleteById(id);
-
+    
     const updateData: Partial<User> = {
       name: updatedUser.name,
       address: updatedUser.address,
@@ -108,15 +107,25 @@ export class UsersService {
       country: updatedUser.country,
       city: updatedUser.city,
     };
-
+    
     return await this.usersRepository.update(user, updateData);
+  }
+
+  async assignRole(userId: string, roleId: string): Promise<UserBaseResponseDto> {
+    const user = await this.findById(userId);
+    const role = await this.rolesService.findById(roleId);
+    
+    user.role = role;
+    const updatedUser = await this.update(user.id, user);
+
+    return updatedUser; 
   }
 
   async remove(id: string): Promise<void> {
     const user: User = await this.findCompleteById(id);
     await this.usersRepository.delete(user);
   }
-
+  
   private toUserResponse(user: User): UserBaseResponseDto {
     const { password, ...userResponse } = user;
     return userResponse as UserBaseResponseDto;

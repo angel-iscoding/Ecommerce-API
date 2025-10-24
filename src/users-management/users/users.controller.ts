@@ -11,6 +11,7 @@ import {
   Delete,
   Get,
   Param,
+  Post,
   Put,
   UseGuards,
   UseInterceptors,
@@ -106,6 +107,28 @@ export class UsersController {
     } catch (error) {
       throw new BadRequestException(
         'Warning: ' + error.message,
+      );
+    }
+  }
+
+  @Post('role-assignment/:userId')
+  @UseGuards(AuthGuard)
+  @Roles(RoleNames.Admin)
+  async assignRole(
+    @Param('userId') userId: string,
+    @Body() body: ParamIdRequestDto
+  ) {
+    try {
+      const assignedRole = this.usersService.assignRole(userId, body.id);
+
+      return {
+        status: 'success',
+        message: 'Role assigned successfully',
+        data: assignedRole
+      };
+    } catch (error) {
+      throw new BadRequestException(
+        'Warning: ' + error.message
       );
     }
   }
