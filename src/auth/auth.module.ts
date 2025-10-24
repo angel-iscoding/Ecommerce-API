@@ -1,17 +1,16 @@
 import { JwtStrategy } from '@/config/jwtStrategy';
 import { UsersModule } from '@/users-management/users/users.module';
-import { Module, forwardRef } from '@nestjs/common';
+import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwtModule, JwtService } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { RolesModule } from '@/users-management/roles/roles.module';
-import { RolesService } from '@/users-management/roles/roles.service';
 
 @Module({
   imports: [
-    forwardRef(() => UsersModule),
+    UsersModule,
     RolesModule,
     PassportModule,
     JwtModule.registerAsync({
@@ -26,7 +25,7 @@ import { RolesService } from '@/users-management/roles/roles.service';
       inject: [ConfigService],
     }),
   ],
-  providers: [AuthService, JwtService, JwtStrategy, RolesService],
+  providers: [AuthService, JwtService, JwtStrategy],
   controllers: [AuthController],
   exports: [AuthService],
 })
