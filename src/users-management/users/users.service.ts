@@ -52,14 +52,7 @@ export class UsersService {
     const user = await this.usersRepository.findByEmail(email);
     return !!user;
   }
-  
-  async validateCredentials(password: string, confirmPassword: string): Promise<boolean> {
-    const isMatch = await bcrypt.compare(password, confirmPassword);
-    
-    if (isMatch) return true;
-    return false;
-  }
-  
+
   async create(CreateUserRequestDto: CreateUserRequestDto): Promise<UserBaseResponseDto> {
     const existingUser = await this.thisUserExist(CreateUserRequestDto.email);
     
