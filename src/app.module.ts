@@ -7,6 +7,7 @@ import { UsersModule } from './users-management/users/users.module';
 import { RolesSeeder } from './users-management/roles/roles.seeder';
 import { UsersSeeder } from './users-management/users/users.seeder';
 import { RolesModule } from './users-management/roles/roles.module';
+import { CartsModule } from './store-management/carts/carts.module';
 
 @Module({
   imports: [
@@ -22,13 +23,13 @@ import { RolesModule } from './users-management/roles/roles.module';
     }),
     RolesModule,
     UsersModule,
+    CartsModule,
     AuthModule,
   ],
   controllers: [],
   providers: [],
 })
 export class AppModule implements OnApplicationBootstrap {
-  [x: string]: any;
   constructor(
     private readonly RolesSeeder: RolesSeeder,
     private readonly UsersSeeder: UsersSeeder,
@@ -37,8 +38,8 @@ export class AppModule implements OnApplicationBootstrap {
   async onApplicationBootstrap() {
     try {
       await this.RolesSeeder.seed();
-      // After roles are seeded, create admin users
       await this.UsersSeeder.seed();
+      // After roles are seeded, create admin users
     } catch (error) {
       // swallow errors during seeding so the app can still start
     }
