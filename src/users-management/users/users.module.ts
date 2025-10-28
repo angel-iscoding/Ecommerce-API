@@ -1,5 +1,4 @@
 import { Module, forwardRef } from '@nestjs/common';
-import { AuthModule } from '@/auth/auth.module';
 import { JwtModule } from '@nestjs/jwt';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Cart } from '@/database/entities/cart.entity';
@@ -20,7 +19,6 @@ import { RolesModule } from '../roles/roles.module';
       secret: process.env.JWT_SECRET,
       signOptions: { expiresIn: '1h' },
     }),
-    forwardRef(() => AuthModule),
     RolesModule,
   ],
   providers: [
