@@ -17,7 +17,6 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
-import { RolesService } from '../roles/roles.service';
 import { RoleNames } from '@/config/role-names.enum';
 import { ApiResponseDto } from '@/database/dto/response/api-base-response.dto';
 import { UpdateUserRequestDto } from '@/database/dto/request/update-user-request.dto';
@@ -27,7 +26,6 @@ import { UpdateUserRequestDto } from '@/database/dto/request/update-user-request
 @Controller('users')
 export class UsersController {
   constructor(
-    private readonly RolesService: RolesService,
     private readonly usersService: UsersService,
   ) {}
 
