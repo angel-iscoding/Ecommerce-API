@@ -1,5 +1,5 @@
 import { AuthGuard } from '@/auth/auth.guard';
-import { RequestWithUser } from '@/config/request-with-user.interface';
+import { IUserPayloadRequest } from '@/database/dto/request/user-payload-request.interface';
 import { Roles } from '@/config/role.decorator';
 import { RoleNames } from '@/config/role-names.enum';
 import { ParamIdRequestDto } from '@/database/dto/request/param-id-request.dto';
@@ -57,7 +57,7 @@ export class OrdersController {
   @Get('orders')
   @UseGuards(AuthGuard)
   @ApiBearerAuth()
-  async getOrderOfUser(@Request() req: RequestWithUser): Promise<Order[]> {
+  async getOrderOfUser(@Request() req: IUserPayloadRequest): Promise<Order[]> {
     try {
       const orders = await this.OrdersService.getOrdersOfUser(req.user.id);
       return orders;
