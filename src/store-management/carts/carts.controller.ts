@@ -1,5 +1,5 @@
 import { AuthGuard } from '@/auth/auth.guard';
-import { RequestWithUser } from '@/config/request-with-user.interface';
+import { IUserPayloadRequest } from '@/database/dto/request/user-payload-request.interface';
 import { Cart } from '@/database/entities/cart.entity';
 import { MigrateCartDto } from '@/database/dto/migrateCartDto.dto';
 import { ParamIdRequestDto } from '@/database/dto/request/param-id-request.dto';
@@ -27,12 +27,25 @@ export class CartsController {
   @Post('add')
   @UseGuards(AuthGuard)
   @ApiBearerAuth()
-  async addToCart(
+  async add(
     @Body() data: string[],
-    @Request() req: RequestWithUser,
-  ): Promise<{ message: string; id: string }> {
+    @Request() req: IUserPayloadRequest,
+  ): Promise<{data: IUserPayloadRequest} /* { message: string; id: string } */> {
     try {
+
+      if (req.user) {
+        
+      }
+
       const isAuthenticated: boolean = req.user ? true : false;
+
+
+
+
+      return;
+      
+
+     /*  const isAuthenticated: boolean = req.user ? true : false;
       const userId: string = isAuthenticated ? req.user.id : uuidv4();
 
       const cart: Cart | TemporaryCart =
@@ -48,7 +61,7 @@ export class CartsController {
           message: `Productos: ${cart.products.map((p) => p.id).join(', ')}. Agregados al carrito del usuario.`,
           id: userId,
         };
-      }
+      } */
     } catch (error) {
       throw new BadRequestException(
         'No se pudo agregar el producto al carrito: ' + error.message,
@@ -59,12 +72,12 @@ export class CartsController {
   @Get(':id')
   @UseGuards(AuthGuard)
   @ApiBearerAuth()
-  async getCart(
+  async findById(
     @Param() params: ParamIdRequestDto,
-    @Request() req: RequestWithUser,
-  ): Promise<{ message: string; id: string; cart: Cart }> {
+    @Request() req: IUserPayloadRequest,
+  ): Promise<any/* { message: string; id: string; cart: Cart } */> {
     try {
-      const isAuthenticated: boolean = req.user ? true : false;
+      /* const isAuthenticated: boolean = req.user ? true : false;
       const idUser: string = isAuthenticated ? req.user.id : params.id;
 
       const cart: Cart = await this.CartsService.getCart(
@@ -76,7 +89,7 @@ export class CartsController {
         message: `Carrito ${isAuthenticated ? '' : 'de usuario no autentificado '}obtenido con exito`,
         id: idUser,
         cart: cart,
-      };
+      }; */
     } catch (error) {
       throw new BadRequestException(
         'No se pudo obtener el carrito: ' + error.message,
@@ -87,11 +100,11 @@ export class CartsController {
   @Post('purchase')
   @ApiBearerAuth()
   @UseGuards(AuthGuard)
-  async buyCart(
-    @Request() req: RequestWithUser,
-  ): Promise<{ message: string; id: string }> {
+  async buy(
+    @Request() req: IUserPayloadRequest,
+  ): Promise<any/* { message: string; id: string } */> {
     try {
-      const isAuthenticated: boolean = req.user ? true : false;
+      /* const isAuthenticated: boolean = req.user ? true : false;
 
       if (!isAuthenticated)
         throw new BadRequestException('No se puede comprar sin iniciar sesión');
@@ -106,7 +119,7 @@ export class CartsController {
         };
       } else {
         throw new BadRequestException('No se pudo realizar la compra');
-      }
+      } */
     } catch (error) {
       throw new BadRequestException(
         'No se pudo realizar la compra: ' + error.message,
@@ -117,12 +130,12 @@ export class CartsController {
   @Post('migrate')
   @UseGuards(AuthGuard)
   @ApiBearerAuth()
-  async migrateCart(
+  async migrate(
     @Body() data: MigrateCartDto,
-    @Request() req: RequestWithUser,
-  ): Promise<{ message: string }> {
+    @Request() req: IUserPayloadRequest,
+  ): Promise<any/* { message: string } */> {
     try {
-      const isAuthenticated: boolean = req.user ? true : false;
+      /* const isAuthenticated: boolean = req.user ? true : false;
 
       if (!isAuthenticated)
         throw new BadRequestException(
@@ -132,7 +145,7 @@ export class CartsController {
       const userId: string = req.user.id;
 
       await this.CartsService.migrateCartToUser(data.temporaryUserId, userId);
-      return { message: 'Carrito migrado exitosamente' };
+      return { message: 'Carrito migrado exitosamente' }; */
     } catch (error) {
       throw new BadRequestException(
         'No se pudo migrar el carrito: ' + error.message,
@@ -143,12 +156,12 @@ export class CartsController {
   @Delete('remove')
   @UseGuards(AuthGuard)
   @ApiBearerAuth()
-  async removeFromCart(
+  async remove(
     @Body() data: string,
-    @Request() req: RequestWithUser,
-  ): Promise<{ message: string }> {
+    @Request() req: IUserPayloadRequest,
+  ): Promise<any/* { message: string } */> {
     try {
-      const isAuthenticated: boolean = req.user ? true : false;
+      /* const isAuthenticated: boolean = req.user ? true : false;
 
       if (!isAuthenticated)
         throw new BadRequestException(
@@ -158,7 +171,7 @@ export class CartsController {
       const userId: string = req.user.id;
 
       await this.CartsService.removeFromCart(userId, data, isAuthenticated);
-      return { message: 'Producto removido del carrito' };
+      return { message: 'Producto removido del carrito' }; */
     } catch (error) {
       throw new BadRequestException(
         'No se pudo remover el producto del carrito: ' + error.message,
@@ -169,11 +182,11 @@ export class CartsController {
   @Delete('clear')
   @UseGuards(AuthGuard)
   @ApiBearerAuth()
-  async clearCart(
-    @Request() req: RequestWithUser,
-  ): Promise<{ message: string }> {
+  async clear(
+    @Request() req: IUserPayloadRequest,
+  ): Promise<any/* { message: string } */> {
     try {
-      const isAuthenticated: boolean = req.user ? true : false;
+      /* const isAuthenticated: boolean = req.user ? true : false;
 
       if (!isAuthenticated)
         throw new BadRequestException(
@@ -183,7 +196,7 @@ export class CartsController {
       const userId: string = req.user.id;
 
       await this.CartsService.clearCart(userId, isAuthenticated);
-      return { message: 'Carrito limpiado' };
+      return { message: 'Carrito limpiado' }; */
     } catch (error) {
       throw new BadRequestException(
         'No se pudo limpiar el carrito: ' + error.message,
